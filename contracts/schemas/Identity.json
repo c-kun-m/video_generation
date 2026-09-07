@@ -1,0 +1,50 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "actor_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Actor Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "display_name": {
+      "title": "Display Name",
+      "type": "string"
+    },
+    "workspace_name": {
+      "title": "Workspace Name",
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "owner",
+        "editor",
+        "reviewer",
+        "viewer",
+        "operator"
+      ],
+      "title": "Role",
+      "type": "string"
+    },
+    "session_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Session Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "actor_id",
+    "tenant_id",
+    "display_name",
+    "workspace_name",
+    "role",
+    "session_id"
+  ],
+  "title": "Identity",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

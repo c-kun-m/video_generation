@@ -1,0 +1,44 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "profile_id": {
+      "const": "narrated-portrait/v1",
+      "default": "narrated-portrait/v1",
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "name": {
+      "default": "中文解说 · 竖屏短片",
+      "title": "Name",
+      "type": "string"
+    },
+    "width": {
+      "default": 720,
+      "title": "Width",
+      "type": "integer"
+    },
+    "height": {
+      "default": 1280,
+      "title": "Height",
+      "type": "integer"
+    },
+    "fps": {
+      "default": 24,
+      "title": "Fps",
+      "type": "integer"
+    },
+    "min_seconds": {
+      "default": 30,
+      "title": "Min Seconds",
+      "type": "integer"
+    },
+    "max_seconds": {
+      "default": 60,
+      "title": "Max Seconds",
+      "type": "integer"
+    }
+  },
+  "title": "ProductProfile",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

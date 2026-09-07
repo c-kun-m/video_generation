@@ -1,0 +1,53 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "enum": [
+        "ok",
+        "ready",
+        "unavailable"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "database": {
+      "anyOf": [
+        {
+          "enum": [
+            "ready",
+            "unavailable"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Database"
+    },
+    "migrations": {
+      "anyOf": [
+        {
+          "enum": [
+            "ready",
+            "pending",
+            "unknown"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Migrations"
+    }
+  },
+  "required": [
+    "status"
+  ],
+  "title": "Health",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

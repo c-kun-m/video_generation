@@ -1,0 +1,19 @@
+name: video-generation
+services:
+  postgres:
+    image: postgres:17@sha256:67f41722b7a8cbdb868a44a4995c846eddfdc2973bccb291ce937dce88ad5675
+    environment:
+      POSTGRES_USER: video
+      POSTGRES_PASSWORD: ${VIDEO_DB_PASSWORD:?Run scripts/dev.ps1 setup first}
+      POSTGRES_DB: video_generation
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U video -d video_generation"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  postgres-data:

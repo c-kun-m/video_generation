@@ -1,0 +1,30 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "command_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Command Id",
+      "type": "string"
+    },
+    "title": {
+      "maxLength": 200,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Title",
+      "type": "string"
+    },
+    "product_profile_ref": {
+      "const": "narrated-portrait/v1",
+      "default": "narrated-portrait/v1",
+      "title": "Product Profile Ref",
+      "type": "string"
+    }
+  },
+  "required": [
+    "command_id",
+    "title"
+  ],
+  "title": "CreateProject",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

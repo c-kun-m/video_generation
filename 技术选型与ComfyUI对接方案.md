@@ -2,7 +2,7 @@
 
 日期：2026-09-07。依据：已逐份阅读本仓库开发文档 README 与 G00–G17，并核对下文链接的官方技术资料。
 
-状态：技术建议，尚未安装运行依赖、锁定版本或接通真实 ComfyUI。用户已明确采用 Python 后端与 LangChain，前端可使用 React；以下细化对应实现方案，不代表 B0–B4 已完成。
+状态：用户已批准并实施第一阶段 Python 后端、PostgreSQL 与 Electron / React 桌面工程，依赖已锁定。实际范围见 [第一阶段实现](docs/phase-one.md)。本文仍描述完整目标架构；LangChain、Temporal、ComfyUI 与 FFmpeg 的真实链路尚未接入，不代表 B0–B4 已完成。
 
 ## 1. 推荐方案
 

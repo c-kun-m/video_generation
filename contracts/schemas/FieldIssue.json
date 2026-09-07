@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "field": {
+      "title": "Field",
+      "type": "string"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    }
+  },
+  "required": [
+    "field",
+    "message"
+  ],
+  "title": "FieldIssue",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

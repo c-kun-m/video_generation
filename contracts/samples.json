@@ -1,0 +1,16 @@
+[
+  {"name":"create-minimal","model":"CreateProject","valid":true,"data":{"command_id":"11111111-1111-4111-8111-111111111111","title":"第一支短片"}},
+  {"name":"create-empty","model":"CreateProject","valid":false,"data":{"command_id":"11111111-1111-4111-8111-111111111111","title":""}},
+  {"name":"create-whitespace","model":"CreateProject","valid":false,"data":{"command_id":"11111111-1111-4111-8111-111111111111","title":"  "}},
+  {"name":"create-numeric-title","model":"CreateProject","valid":false,"data":{"command_id":"11111111-1111-4111-8111-111111111111","title":12}},
+  {"name":"create-tenant-injection","model":"CreateProject","valid":false,"data":{"command_id":"11111111-1111-4111-8111-111111111111","title":"第一支短片","tenant_id":"tenant"}},
+  {"name":"create-invalid-id","model":"CreateProject","valid":false,"data":{"command_id":"bad-id","title":"第一支短片"}},
+  {"name":"update-title","model":"UpdateProject","valid":true,"data":{"command_id":"11111111-1111-4111-8111-111111111111","expected_row_version":1,"title":"新名称"}},
+  {"name":"update-archive","model":"UpdateProject","valid":true,"data":{"command_id":"11111111-1111-4111-8111-111111111111","expected_row_version":1,"archived":false}},
+  {"name":"update-no-changes","model":"UpdateProject","valid":false,"data":{"command_id":"11111111-1111-4111-8111-111111111111","expected_row_version":1}},
+  {"name":"update-null-title","model":"UpdateProject","valid":false,"data":{"command_id":"11111111-1111-4111-8111-111111111111","expected_row_version":1,"title":null}},
+  {"name":"update-string-bool","model":"UpdateProject","valid":false,"data":{"command_id":"11111111-1111-4111-8111-111111111111","expected_row_version":1,"archived":"false"}},
+  {"name":"update-bool-version","model":"UpdateProject","valid":false,"data":{"command_id":"11111111-1111-4111-8111-111111111111","expected_row_version":true,"archived":true}},
+  {"name":"pair-valid","model":"PairRequest","valid":true,"data":{"pairing_code":"fixture-only-not-a-real-secret","device_name":"我的桌面"}},
+  {"name":"pair-empty-device","model":"PairRequest","valid":false,"data":{"pairing_code":"fixture-only-not-a-real-secret","device_name":" "}}
+]

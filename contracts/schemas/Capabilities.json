@@ -1,0 +1,105 @@
+{
+  "$defs": {
+    "Capability": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ready",
+            "not_integrated"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "status"
+      ],
+      "title": "Capability",
+      "type": "object"
+    },
+    "ProductProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "profile_id": {
+          "const": "narrated-portrait/v1",
+          "default": "narrated-portrait/v1",
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "name": {
+          "default": "中文解说 · 竖屏短片",
+          "title": "Name",
+          "type": "string"
+        },
+        "width": {
+          "default": 720,
+          "title": "Width",
+          "type": "integer"
+        },
+        "height": {
+          "default": 1280,
+          "title": "Height",
+          "type": "integer"
+        },
+        "fps": {
+          "default": 24,
+          "title": "Fps",
+          "type": "integer"
+        },
+        "min_seconds": {
+          "default": 30,
+          "title": "Min Seconds",
+          "type": "integer"
+        },
+        "max_seconds": {
+          "default": 60,
+          "title": "Max Seconds",
+          "type": "integer"
+        }
+      },
+      "title": "ProductProfile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "app_version": {
+      "title": "App Version",
+      "type": "string"
+    },
+    "contract_version": {
+      "const": "video/v1",
+      "default": "video/v1",
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "product_profile": {
+      "$ref": "#/$defs/ProductProfile"
+    },
+    "capabilities": {
+      "items": {
+        "$ref": "#/$defs/Capability"
+      },
+      "title": "Capabilities",
+      "type": "array"
+    }
+  },
+  "required": [
+    "app_version",
+    "capabilities"
+  ],
+  "title": "Capabilities",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

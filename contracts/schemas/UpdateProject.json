@@ -1,0 +1,59 @@
+{
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "title": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "title"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "archived": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "archived"
+          ],
+          "type": "object"
+        }
+      ]
+    }
+  ],
+  "properties": {
+    "command_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Command Id",
+      "type": "string"
+    },
+    "expected_row_version": {
+      "minimum": 1,
+      "title": "Expected Row Version",
+      "type": "integer"
+    },
+    "title": {
+      "maxLength": 200,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "archived": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "command_id",
+    "expected_row_version"
+  ],
+  "title": "UpdateProject",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
