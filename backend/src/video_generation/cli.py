@@ -38,14 +38,21 @@ async def _pair(name: str, as_json: bool):
         await engine.dispose()
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Video Generation local management")
+def main(argv: list[str] | None = None):
+    parser = argparse.ArgumentParser(description="Video Generation API and local management")
     sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("serve", help="Start the local API with the supported event loop")
     owner = sub.add_parser(
         "init-owner", help="Initialize local owner and issue a one-time pairing code"
     )
     owner.add_argument("--name", default="本机创作者")
     owner.add_argument("--json", action="store_true")
-    args = parser.parse_args()
-    if args.command == "init-owner":
+    args = parser.parse_args(argv)
+    if args.command == "serve":
+        serve()
+    elif args.command == "init-owner":
         asyncio.run(_pair(args.name, args.json), loop_factory=loop_factory)
+
+
+if __name__ == "__main__":
+    main()

@@ -25,3 +25,9 @@
 截图与运行日志保存在本机 `runtime/verification/`；其中项目名称是独立测试数据库中的验收数据。测试产物和可执行构建不进入 Git。
 
 本次没有执行模型推理、ComfyUI 工作流、Temporal workflow、FFmpeg 合成、安装包签名、公网或多机部署测试，界面也未宣称这些能力可用。
+
+## PyCharm 启动入口修复（2026-09-07）
+
+补齐 `python -m video_generation serve` 和直接运行 `cli.py` 的入口，保留已有 console scripts。新增测试覆盖根目录 / backend 两个工作目录、三种 CLI 入口、无参数不执行管理操作及 serve 分发；后端测试结果为 **27 passed**，Ruff 通过。从 backend 目录实际启动 API 后，PostgreSQL `/health/ready` 检查通过。
+
+共享 `.run` 配置已提供，解释器与模块启动命令已验证；未自动操作 PyCharm 窗口进行 IDE 原生调试验收。上面的 Windows 桌面构建记录仍对应第一阶段构建，本次没有变更桌面代码。

@@ -1,5 +1,7 @@
 # 开发与运行
 
+只在 PyCharm 打开 `backend` 时，使用 [后端 IDE 配置说明](../backend/README.md) 和共享 `.run` 配置。
+
 ## 环境与配置
 
 在仓库根目录运行 `scripts/dev.ps1`。推荐 PowerShell 7，Windows PowerShell 5.1 也可运行脚本。使用 Python 3.12、Node 24、pnpm 11.19.0；`python -m uv` 避免 uv 用户安装目录不在 PATH 的问题。Docker Desktop 需要先启动 Linux 容器引擎。

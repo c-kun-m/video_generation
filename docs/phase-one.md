@@ -2,6 +2,8 @@
 
 用户批准的实现范围为 Python 后端、真实 PostgreSQL、Electron 桌面外壳和 React 项目管理工作台。第一阶段的“完成”指本文件中的业务闭环，不代表 G00–G17 的全部要求或 B0–B4 已完成。
 
+后续代码结构与 Agent 边界的具体评估见 [架构评估](architecture-review.md)。
+
 ## 已实现的闭环
 
 1. 管理命令初始化本机工作空间与 owner，签发一次性配对码。

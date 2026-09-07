@@ -10,6 +10,7 @@ LangChain、Temporal、ComfyUI 和 FFmpeg 的真实创作链路属于后续阶�
 - [技术选型与 ComfyUI 对接方案](技术选型与ComfyUI对接方案.md)
 - [第一阶段架构、范围与验收](docs/phase-one.md)
 - [运行、测试与故障排查](docs/development.md)
+- [直接在 PyCharm 打开 backend](backend/README.md)
 
 ## 本机启动（Windows / PowerShell）
 

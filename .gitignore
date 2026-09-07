@@ -21,6 +21,7 @@ __pycache__/
 .ruff_cache/
 
 # Local configuration and credentials
+.idea/
 .env
 .env.*
 !.env.example
