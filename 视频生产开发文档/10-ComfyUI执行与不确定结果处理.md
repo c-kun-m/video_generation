@@ -21,6 +21,8 @@
 
 每个 Render Worker 使用持久卷保存 execution journal（建议 SQLite WAL + 明确同步配置，具体模式经断电/进程故障测试），ComfyUI output 与输入缓存分别有独立目录。容器临时文件系统不能承担唯一回执存储。
 
+Render Worker 使用 Python 实现，`httpx.AsyncClient` 负责 HTTP，`websockets` 负责进度通道，SQLite journal 经串行写入并确认提交后才允许外部提交。HTTP 客户端复用有界连接池、关闭提交自动重试；同步日志/大文件操作不能阻塞 asyncio。业务 Worker 与 ComfyUI 使用独立虚拟环境，不能通过导入 ComfyUI 内部 Python 模块耦合进程与依赖。
+
 日志键为 attempt_id，内容包含 job_id、candidate_id、worker_id/epoch、lease_fence、comfy_instance_id/epoch、render_spec_digest、request_digest、state、request_marker、prompt_id（可空）、本地输出路径集合、上报确认位置和时间。日志不得保存供应商秘密。
 
 `prompt_id` 与 ComfyUI 实例身份和世代一起使用；单独一个 prompt_id 不能作为全局唯一执行身份。重启/替换实例必须生成新 instance_epoch，旧日志不能误关联到新实例。

@@ -14,7 +14,7 @@
 | G05-F02 | 剧本生成与改写 | 已选 Brief + 修改意见 → ScriptRevision 草稿 | G03、G07 | 保留旁白段落 ID，分别存画面说明和朗读文本 |
 | G05-F03 | 分镜规划 | 剧本 + 语音时长 + 参考素材 → Storyboard/Shot 草稿 | G06、G07 | 依据实际时间线安排镜头，写明动作、景别和衔接要求 |
 | G05-F04 | 一致性与可执行性检查 | 草稿 → 检查报告/有限修订 | G07、G08 | 程序检查硬约束；模型辅助检查叙事与角色描述 |
-| G05-F05 | 可替换执行适配 | CreativeTaskSpec → CreativeResult | G01、G04 | 结构化 LLM/Harness 使用同一合同；记录调用血缘 |
+| G05-F05 | 可替换执行适配 | CreativeTaskSpec → CreativeResult | G01、G04 | LangChain Python/可选 Harness 使用同一合同；记录调用血缘 |
 | G05-F06 | 可解释的修改建议 | 用户反馈 + 原版本 → ProposedChange | G12、G14 | 返回修改字段与原因，不自行覆盖当前头或批准 |
 
 ## 3. 输入输出合同
@@ -36,9 +36,13 @@
 
 ## 5. 如何实现
 
+首版实现 Python `LangChainAgentProvider`，通过异步 `generate(spec, operation_id)` / `query(operation_id)` 接入 G04。简单阶段使用结构化模型调用，需要素材工具时使用 `create_agent` 与受控 Python 函数；`response_format` 优先采用 Pydantic 模型，读取 `structured_response` 后再完成领域校验。工具不能绕过现有权限。图像/语音等重型工具放在相应执行进程，模型 HTTP 等待不阻塞 API；ComfyUI 始终经 G10 调用。[LangChain Python 结构化输出](https://docs.langchain.com/oss/python/langchain/structured-output)
+
 提示词模板与输出 Schema 单独版本化，角色/品牌约束作为明确输入引用，不从长会话摘要中猜测。Provider 适配器负责结构化输出能力探测；不支持原生结构化输出时进行 JSON 提取和验证，但不得把自由文本直接当成生产规格。
 
 初始策略：每个创作任务最多 3 次模型调用，其中一次初始生成、最多两次格式/内容修复；每次都有独立 operation_id 和用量记录。模板不要求返回模型的隐藏推理过程，保存可读的修改理由和检查结果即可。
+
+LangChain 的格式修复、工具循环与供应商 SDK 重试都计入上述全任务上限；恢复时读取持久化调用账本，不因新进程或 Activity 重试重置次数。LangGraph 可作为单个创作任务内部实现，项目审批、预算与制作推进仍由领域服务和 Temporal 管理。
 
 硬约束检查用确定性程序实现：画幅枚举、镜头数量、时间线长度、引用版本、字符长度、禁止负帧数。软检查由模型输出带位置的意见和置信描述；不得把主观评分当成概率或替代人工审片。
 
@@ -59,7 +63,7 @@ LLM 输出存入结果仓储后再返回 Activity；网络回报丢失先按 ope
 
 ## 7. 实现任务
 
-实现 Provider 假对象与固定 Schema 样例 → Brief/Script/Storyboard 三阶段模板 → 程序校验器 → 修复次数和成本控制 → 草稿差异展示 → 真实 LLM 集成 → 可选 Harness 适配兼容测试。提示词编译成特定视频模型输入属于 G08，不放进本模块的自由工具循环。
+实现 Provider 假对象与固定 Schema 样例 → Brief/Script/Storyboard 三阶段模板 → 程序校验器 → 修复次数和成本控制 → 草稿差异展示 → LangChain Python 真实 LLM 集成 → 可选 Harness 适配兼容测试。提示词编译成特定视频模型输入属于 G08，不放进本模块的自由工具循环。
 
 ## 8. 验收条件
 

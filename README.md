@@ -7,8 +7,8 @@
 - [开发文档入口：G00–G17](视频生产开发文档/README.md)
 - [技术选型与 ComfyUI 对接方案](技术选型与ComfyUI对接方案.md)
 
-建议采用 React / Electron、TypeScript / Fastify、LangChain JS、Temporal、PostgreSQL、ComfyUI 和 FFmpeg。具体职责、接口、恢复规则与开发顺序见选型方案。
+采用 Python 后端：FastAPI、LangChain Python、Temporal Python SDK、PostgreSQL / SQLAlchemy / Alembic；前端使用 React / TypeScript / Electron，视频生成与合成使用 ComfyUI 和 FFmpeg。具体职责、接口、恢复规则与开发顺序见选型方案。
 
-原开发文档引用的 `UI开发/`、`开发文档/`、`upstream.lock.json` 和原桌面工程未包含在本仓库；这些历史引用不代表对应工程已存在。原稿保留，选型补充单独记录，不将设计文档标记为已实现。
+原开发文档引用的 `UI开发/`、`开发文档/`、`upstream.lock.json` 和原桌面工程未包含在本仓库；这些历史引用不代表对应工程已存在。2026-09-07 已按用户选择同步修订为 Python 后端方案，此前版本可从 Git 历史查看；设计文档不代表功能已实现。
 
 模型权重、运行数据和凭据保存在 Git 之外。工作流 API JSON、参数绑定和依赖摘要应纳入版本控制。
