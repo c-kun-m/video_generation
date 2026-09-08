@@ -2,13 +2,15 @@
 
 文本驱动的视频生产项目，目标是完成需求、剧本、配音、分镜、镜头生成、审片、局部重做和成片导出。
 
-第一阶段工程已实现：**Python / FastAPI / PostgreSQL 后端 + Electron / React 桌面端**，支持设备配对、项目创建、查询、重命名、归档和恢复。命令具有幂等去重、版本冲突检查和断线恢复能力。
+当前实现 **B1 第一部分**：Python / FastAPI / PostgreSQL 后端 + Electron / React 桌面端，在项目管理基础上支持需求、剧本和分镜编辑、不可变版本、精确版本审批，以及真实 Temporal 上可暂停、取消、重启恢复的模拟制作。
 
-LangChain、Temporal、ComfyUI 和 FFmpeg 的真实创作链路属于后续阶段，当前能力页面会显示“尚未接入”。本次交付不代表 B0–B4 或真实视频生成验收完成。
+LangChain、ComfyUI 和 FFmpeg 尚未接入；模拟演练只产生步骤记录与报告，不生成视频。本次交付不代表完整 B1、B0–B4 或真实视频生成验收完成。
 
 - [开发文档入口：G00–G17](视频生产开发文档/README.md)
 - [技术选型与 ComfyUI 对接方案](技术选型与ComfyUI对接方案.md)
 - [第一阶段架构、范围与验收](docs/phase-one.md)
+- [B1 第一部分：运行、交互与恢复](docs/b1-first-part.md)
+- [目标分步与验收进度](docs/b1-progress.md)
 - [运行、测试与故障排查](docs/development.md)
 - [直接在 PyCharm 打开 backend](backend/README.md)
 
@@ -27,7 +29,7 @@ LangChain、Temporal、ComfyUI 和 FFmpeg 的真实创作链路属于后续阶�
 
 `setup` 自动生成本机数据库密码，不覆盖已有 `.env`。`pair` 会显示 10 分钟有效的一次性配对码。
 
-分别打开两个终端：
+分别打开四个终端：
 
 ```powershell
 # 终端 1：保持后端运行
@@ -35,11 +37,21 @@ LangChain、Temporal、ComfyUI 和 FFmpeg 的真实创作链路属于后续阶�
 ```
 
 ```powershell
-# 终端 2：启动桌面，在配对页面输入刚才的配对码
+# 终端 2：投递持久化命令
+.\scripts\dev.ps1 dispatcher
+```
+
+```powershell
+# 终端 3：执行可恢复的模拟流程
+.\scripts\dev.ps1 worker
+```
+
+```powershell
+# 终端 4：启动桌面，在配对页面输入刚才的配对码
 .\scripts\dev.ps1 desktop
 ```
 
-开发桌面占用 `127.0.0.1:5173`，API 使用 `127.0.0.1:8000`，PostgreSQL 使用 `127.0.0.1:5432`。关闭桌面不会停止后端或数据库。
+开发桌面占用 `127.0.0.1:5173`，API 使用 `127.0.0.1:8000`，业务 PostgreSQL 使用 `127.0.0.1:5432`，Temporal 使用 `127.0.0.1:7233`。关闭桌面不会停止后台流程。内容编辑和审批只依赖 API 与业务数据库。
 
 ## 构建与验证
 
@@ -57,13 +69,16 @@ LangChain、Temporal、ComfyUI 和 FFmpeg 的真实创作链路属于后续阶�
 frontend/                 Electron Main / Preload、React 页面与桌面测试
 backend/src/video_generation/
   api/                    FastAPI HTTP 边界、身份校验、健康检查
-  domain/                 项目、配对、命令幂等与事件逻辑
-  storage/                SQLAlchemy 模型、会话工厂
+  application/            项目、内容、审批、制作及共享命令用例
+  domain/                 身份、内容校验与业务错误
+  infrastructure/         SQLAlchemy 持久化与 Outbox 仓储
+  orchestration/          Temporal Workflow、Activity 与消息
+  workers/                独立 Worker、投递器、初始化入口
   contracts/              Pydantic 合同与导出入口
   adapters/               Agent / Render / Media / Storage Protocol
 backend/migrations/       Alembic 迁移
 contracts/                导出的 OpenAPI、JSON Schema、跨语言测试样例
-deploy/video/             固定镜像摘要的 PostgreSQL Compose
+deploy/video/             固定镜像摘要的 PostgreSQL / Temporal Compose
 scripts/                  Windows 开发入口与测试数据库准备
 docs/                     本次实际实现及运行说明
 视频生产开发文档/          完整产品设计 G00–G17

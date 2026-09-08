@@ -1,6 +1,6 @@
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('setup', 'check', 'infra', 'migrate', 'pair', 'backend', 'desktop', 'preview', 'contracts', 'build', 'test', 'test-e2e', 'package')]
+    [ValidateSet('setup', 'check', 'infra', 'migrate', 'pair', 'backend', 'worker', 'dispatcher', 'init-temporal', 'desktop', 'preview', 'contracts', 'build', 'test', 'test-e2e', 'package')]
     [string]$Action = 'check'
 )
 $ErrorActionPreference = 'Stop'
@@ -14,6 +14,21 @@ function Run-Checked([string]$Program, [string[]]$Arguments) {
 }
 function Invoke-Uv([string[]]$Arguments) { Run-Checked 'python' (@('-m', 'uv') + $Arguments) }
 function Invoke-Frontend([string[]]$Arguments) { Run-Checked 'pnpm' (@('--dir', 'frontend') + $Arguments) }
+function Ensure-TemporalConfig {
+    if (-not (Test-Path -LiteralPath '.env')) { throw 'Run setup first.' }
+    $videoConfig = [IO.File]::ReadAllText((Join-Path $videoRoot '.env'))
+    if ($videoConfig -notmatch '(?m)^VIDEO_TEMPORAL_DB_PASSWORD=.+$' -or $videoConfig.Contains('replace-with-a-temporal-password')) {
+        $videoBytes = New-Object byte[] 24
+        $videoRng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+        try { $videoRng.GetBytes($videoBytes) } finally { $videoRng.Dispose() }
+        $videoPassword = -join ($videoBytes | ForEach-Object { $_.ToString('x2') })
+        if ($videoConfig -match '(?m)^VIDEO_TEMPORAL_DB_PASSWORD=') {
+            $videoConfig = [regex]::Replace($videoConfig, '(?m)^VIDEO_TEMPORAL_DB_PASSWORD=.*$', "VIDEO_TEMPORAL_DB_PASSWORD=$videoPassword")
+        } else { $videoConfig = $videoConfig.TrimEnd() + "`nVIDEO_TEMPORAL_DB_PASSWORD=$videoPassword`n" }
+        [IO.File]::WriteAllText((Join-Path $videoRoot '.env'), $videoConfig)
+        Write-Host 'Configured an independent local Temporal database password.'
+    }
+}
 function Read-ServiceConfig {
     # Only the public service URL reaches Electron. Database credentials stay in Python/Compose.
     if (Test-Path -LiteralPath '.env') {
@@ -38,6 +53,7 @@ switch ($Action) {
             [IO.File]::WriteAllText((Join-Path $videoRoot '.env'), $videoContents)
             Write-Host 'Created .env with a random local database password.'
         }
+        Ensure-TemporalConfig
         Invoke-Uv @('sync', '--project', 'backend', '--frozen')
         Invoke-Frontend @('install', '--frozen-lockfile')
     }
@@ -50,10 +66,17 @@ switch ($Action) {
         if (-not (Test-Path -LiteralPath '.env')) { throw 'Run setup to create .env first.' }
         Write-Host 'Local tools are available.'
     }
-    'infra' { Run-Checked 'docker' @('compose', '--env-file', '.env', '-f', 'deploy/video/compose.yaml', 'up', '-d', '--wait') }
+    'infra' {
+        Ensure-TemporalConfig
+        Run-Checked 'docker' @('compose', '--env-file', '.env', '-f', 'deploy/video/compose.yaml', 'up', '-d', '--wait')
+        Invoke-Uv @('run', '--project', 'backend', '--frozen', 'python', '-m', 'video_generation', 'init-temporal')
+    }
     'migrate' { Invoke-Uv @('run', '--project', 'backend', '--frozen', 'alembic', '-c', 'backend/alembic.ini', 'upgrade', 'head') }
     'pair' { Invoke-Uv @('run', '--project', 'backend', '--frozen', 'video-admin', 'init-owner') }
     'backend' { Invoke-Uv @('run', '--project', 'backend', '--frozen', 'video-api') }
+    'worker' { Invoke-Uv @('run', '--project', 'backend', '--frozen', 'python', '-m', 'video_generation', 'worker') }
+    'dispatcher' { Invoke-Uv @('run', '--project', 'backend', '--frozen', 'python', '-m', 'video_generation', 'dispatcher') }
+    'init-temporal' { Invoke-Uv @('run', '--project', 'backend', '--frozen', 'python', '-m', 'video_generation', 'init-temporal') }
     'desktop' { Read-ServiceConfig; Invoke-Frontend @('dev') }
     'preview' { Read-ServiceConfig; Invoke-Frontend @('preview') }
     'contracts' {

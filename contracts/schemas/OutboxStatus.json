@@ -1,0 +1,44 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "pending": {
+      "title": "Pending",
+      "type": "integer"
+    },
+    "dead_letters": {
+      "title": "Dead Letters",
+      "type": "integer"
+    },
+    "last_worker_seen_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Last Worker Seen At"
+    },
+    "last_dispatcher_seen_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Last Dispatcher Seen At"
+    }
+  },
+  "required": [
+    "pending",
+    "dead_letters",
+    "last_worker_seen_at",
+    "last_dispatcher_seen_at"
+  ],
+  "title": "OutboxStatus",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -17,7 +17,7 @@ from video_generation.api.routes import router
 from video_generation.config import MIGRATION_HEAD, Settings
 from video_generation.contracts.models import ErrorDetail, ErrorResponse, FieldIssue, Health
 from video_generation.domain.errors import DomainError
-from video_generation.storage.database import create_database
+from video_generation.infrastructure.persistence.database import create_database
 
 log = logging.getLogger("video.api")
 

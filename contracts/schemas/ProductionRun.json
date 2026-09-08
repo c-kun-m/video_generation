@@ -1,0 +1,118 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "production_run_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Production Run Id",
+      "type": "string"
+    },
+    "project_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "execution_mode": {
+      "const": "simulation",
+      "default": "simulation",
+      "title": "Execution Mode",
+      "type": "string"
+    },
+    "workflow_id": {
+      "title": "Workflow Id",
+      "type": "string"
+    },
+    "temporal_run_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Temporal Run Id"
+    },
+    "status": {
+      "enum": [
+        "CREATED",
+        "PREPARING",
+        "RENDERING",
+        "COMPLETED",
+        "PAUSED",
+        "FAILED",
+        "CANCEL_REQUESTED",
+        "CANCELLED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "stage": {
+      "title": "Stage",
+      "type": "string"
+    },
+    "pause_requested": {
+      "title": "Pause Requested",
+      "type": "boolean"
+    },
+    "row_version": {
+      "title": "Row Version",
+      "type": "integer"
+    },
+    "control_seq": {
+      "title": "Control Seq",
+      "type": "integer"
+    },
+    "completed_shots": {
+      "title": "Completed Shots",
+      "type": "integer"
+    },
+    "total_shots": {
+      "title": "Total Shots",
+      "type": "integer"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Error"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "production_run_id",
+    "project_id",
+    "snapshot_id",
+    "workflow_id",
+    "temporal_run_id",
+    "status",
+    "stage",
+    "pause_requested",
+    "row_version",
+    "control_seq",
+    "completed_shots",
+    "total_shots",
+    "error",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "ProductionRun",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

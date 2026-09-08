@@ -3,9 +3,9 @@ import asyncio
 from alembic import context
 
 from video_generation.config import Settings
+from video_generation.infrastructure.persistence.database import create_database
+from video_generation.infrastructure.persistence.models import Base
 from video_generation.runtime import loop_factory
-from video_generation.storage.database import create_database
-from video_generation.storage.models import Base
 
 
 def run_sync(connection):

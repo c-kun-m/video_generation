@@ -1,0 +1,22 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "approval",
+      "default": "approval",
+      "title": "Kind",
+      "type": "string"
+    },
+    "approval_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Approval Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "approval_id"
+  ],
+  "title": "ApprovalRef",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

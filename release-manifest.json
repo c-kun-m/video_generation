@@ -1,7 +1,7 @@
 {
-  "version": "0.1.0",
-  "phase": "foundation-and-project-management",
-  "verified_on": "2026-09-07",
+  "version": "0.2.0",
+  "phase": "b1-part-01-content-approvals-durable-simulation",
+  "verified_on": "2026-09-08",
   "platform": "Windows 11 x64",
   "python": "3.12.6",
   "node": "24.19.0",
@@ -9,11 +9,11 @@
   "uv": "0.12.10",
   "docker_engine": "29.2.1",
   "postgres_image": "postgres:17@sha256:67f41722b7a8cbdb868a44a4995c846eddfdc2973bccb291ce937dce88ad5675",
-  "migration_head": "0001_foundation",
+  "migration_head": "0002_content_runs",
   "contract_version": "video/v1",
-  "source_base_commit": "0fb7d1937da570f49337d47c4c95489a5dba76d7",
+  "source_base_commit": "85e63c7580c34feefe7de86e93fd9116b209e9f5",
   "locks": {
-    "backend/uv.lock": "9ca7871bc844fec870afbf59a0a81e83955f809e66a1f1c0e8f9173446512043",
+    "backend/uv.lock": "490c527daef0ef60636742a49f3b11cfd7e968555182876f128b2921c9bcb17d",
     "frontend/pnpm-lock.yaml": "35285c95be31beff21f960572fe2e74366b282701aec9ac2e6950b8808395093"
   },
   "desktop": {
@@ -21,15 +21,26 @@
     "electron_vite": "5.0.0",
     "electron_builder": "26.15.3",
     "artifact": "frontend/release/win-unpacked/Video Generation.exe",
-    "asar_sha256": "0cb5e0660190922431c8d0d5014851bc23edd6ee99afb6a4ed77154a376d4bd7",
+    "asar_sha256": "3970d3f75ec4f49ab34c360ad7cf5593924ad7f10b5dd7552a7c6c717911e14a",
     "distribution": "unsigned-directory",
     "requires_independent_backend": true
   },
   "not_integrated": [
     "LangChain",
-    "Temporal",
     "ComfyUI",
+    "TTS",
     "FFmpeg",
-    "production-media-storage"
-  ]
+    "production-media-storage",
+    "GPU-scheduling-and-budget"
+  ],
+  "temporal": {
+    "python_sdk": "1.32.0",
+    "server_image": "temporalio/server:1.31.0@sha256:d7b3a2f56c599b317494b28e84099c02a096a94005fd20180b54d5ae5a8b3be1",
+    "schema_image": "temporalio/admin-tools:1.31.0@sha256:b396c1dff819b3653236f3acb65cfcde2bc032822c4202842236fd8a5d6d5898",
+    "workflow_type": "SimulationProductionWorkflowV1",
+    "persistent_postgres": true,
+    "execution_mode": "simulation"
+  },
+  "verification_ref": "docs/b1-verification.md",
+  "evidence_ref": "evidence/reports/b1-verification.json"
 }

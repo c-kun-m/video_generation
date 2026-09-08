@@ -5,8 +5,8 @@ import httpx
 from sqlalchemy import delete, func, select
 
 from video_generation.api.app import create_app
-from video_generation.domain.auth import initialize_owner, secret_hash
-from video_generation.storage.models import (
+from video_generation.application.auth import initialize_owner, secret_hash
+from video_generation.infrastructure.persistence.models import (
     Actor,
     Command,
     DeviceSession,

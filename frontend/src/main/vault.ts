@@ -7,15 +7,28 @@ import {
   mkdirSync,
 } from "node:fs";
 import { join } from "node:path";
-import type { Schema } from "../shared/bridge";
+import type { Schema, LocalDraft } from "../shared/bridge";
 
 export type SavedCommand =
   | { kind: "create"; body: Schema["CreateProject"] }
-  | { kind: "update"; project_id: string; body: Schema["UpdateProject"] };
+  | { kind: "update"; project_id: string; body: Schema["UpdateProject"] }
+  | { kind: "saveRevision"; project_id: string; body: Schema["SaveRevision"] }
+  | {
+      kind: "submitApproval";
+      project_id: string;
+      body: Schema["SubmitApproval"];
+    }
+  | { kind: "startRun"; project_id: string; body: Schema["StartProductionRun"] }
+  | {
+      kind: "controlRun";
+      run_id: string;
+      body: Schema["ControlProductionRun"];
+    };
 type VaultState = {
   token: string | null;
   identity: Schema["Identity"] | null;
   pending: SavedCommand[];
+  drafts?: Record<string, LocalDraft>;
 };
 export class Vault {
   private file: string;
@@ -44,7 +57,12 @@ export class Vault {
     renameSync(temp, this.file);
   }
   clear() {
-    this.data = { token: null, identity: null, pending: [] };
+    this.data = {
+      token: null,
+      identity: null,
+      pending: [],
+      drafts: this.data.drafts ?? {},
+    };
     this.save();
   }
 }

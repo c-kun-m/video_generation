@@ -1,0 +1,28 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "production_run",
+      "default": "production_run",
+      "title": "Kind",
+      "type": "string"
+    },
+    "production_run_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Production Run Id",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Snapshot Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "production_run_id",
+    "snapshot_id"
+  ],
+  "title": "RunRef",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

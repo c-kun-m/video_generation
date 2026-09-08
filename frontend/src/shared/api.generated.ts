@@ -175,6 +175,93 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/video/v1/projects/{project_id}/revisions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Revisions */
+    get: operations["listRevisions"];
+    put?: never;
+    /** Save Revision */
+    post: operations["saveRevision"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/video/v1/projects/{project_id}/approvals": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Approvals */
+    get: operations["listApprovals"];
+    put?: never;
+    /** Submit Approval */
+    post: operations["submitApproval"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/video/v1/projects/{project_id}/production-runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Start Run */
+    post: operations["startProductionRun"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/video/v1/production-runs/{run_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Run Detail */
+    get: operations["getProductionRun"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/video/v1/production-runs/{run_id}/commands": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Control Run */
+    post: operations["controlProductionRun"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/video/v1/system/capabilities": {
     parameters: {
       query?: never;
@@ -192,10 +279,103 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/video/v1/system/execution-status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Runtime Status */
+    get: operations["getExecutionStatus"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /** Approval */
+    Approval: {
+      /** Approval Id */
+      approval_id: string;
+      /** Project Id */
+      project_id: string;
+      subject_ref: components["schemas"]["ContentRef"];
+      /**
+       * Decision
+       * @enum {string}
+       */
+      decision: "APPROVED" | "REJECTED" | "REVOKED";
+      /**
+       * Policy Version
+       * @default manual-content/v1
+       * @constant
+       */
+      policy_version?: "manual-content/v1";
+      /** Comment */
+      comment: string;
+      /** Actor Id */
+      actor_id: string;
+      /** Command Id */
+      command_id: string;
+      /** Created At */
+      created_at: string;
+    };
+    /** ApprovalPage */
+    ApprovalPage: {
+      /** Items */
+      items: components["schemas"]["Approval"][];
+    };
+    /** ApprovalRef */
+    ApprovalRef: {
+      /**
+       * Kind
+       * @default approval
+       * @constant
+       */
+      kind?: "approval";
+      /** Approval Id */
+      approval_id: string;
+    };
+    /** BriefContent */
+    BriefContent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "brief";
+      /**
+       * Theme
+       * @default
+       */
+      theme?: string;
+      /**
+       * Audience
+       * @default
+       */
+      audience?: string;
+      /**
+       * Purpose
+       * @default
+       */
+      purpose?: string;
+      /**
+       * Style
+       * @default
+       */
+      style?: string;
+      /**
+       * Constraints
+       * @default
+       */
+      constraints?: string;
+    };
     /** Capabilities */
     Capabilities: {
       /** App Version */
@@ -230,10 +410,90 @@ export interface components {
        * Status
        * @enum {string}
        */
-      status: "APPLIED" | "REJECTED";
-      business_result_ref?: components["schemas"]["ProjectRef"] | null;
+      status: "ACCEPTED" | "APPLIED" | "REJECTED";
+      /** Business Result Ref */
+      business_result_ref?:
+        | components["schemas"]["ProjectRef"]
+        | components["schemas"]["ContentRef"]
+        | components["schemas"]["ApprovalRef"]
+        | components["schemas"]["RunRef"]
+        | null;
       project?: components["schemas"]["Project"] | null;
       error?: components["schemas"]["ErrorDetail"] | null;
+    };
+    /** ContentHead */
+    ContentHead: {
+      /**
+       * Entity Kind
+       * @enum {string}
+       */
+      entity_kind: "brief" | "script" | "storyboard";
+      /** Row Version */
+      row_version: number;
+      current: components["schemas"]["ContentRevision"];
+      /**
+       * Review Status
+       * @enum {string}
+       */
+      review_status: "DRAFT" | "APPROVED" | "REJECTED" | "REVOKED";
+      /**
+       * Upstream Outdated
+       * @default false
+       */
+      upstream_outdated?: boolean;
+    };
+    /** ContentRef */
+    ContentRef: {
+      /**
+       * Kind
+       * @default content
+       * @constant
+       */
+      kind?: "content";
+      /**
+       * Entity Kind
+       * @enum {string}
+       */
+      entity_kind: "brief" | "script" | "storyboard";
+      /** Revision Id */
+      revision_id: string;
+      /** Digest */
+      digest: string;
+    };
+    /** ContentRevision */
+    ContentRevision: {
+      ref: components["schemas"]["ContentRef"];
+      /** Project Id */
+      project_id: string;
+      /** Revision */
+      revision: number;
+      /**
+       * Schema Version
+       * @default 1
+       * @constant
+       */
+      schema_version?: 1;
+      /** Parent Revision Id */
+      parent_revision_id: string | null;
+      /** Payload */
+      payload:
+        | components["schemas"]["BriefContent"]
+        | components["schemas"]["ScriptContent"]
+        | components["schemas"]["StoryboardContent"];
+      /** Created By */
+      created_by: string;
+      /** Created At */
+      created_at: string;
+    };
+    /** ControlProductionRun */
+    ControlProductionRun: {
+      /** Command Id */
+      command_id: string;
+      /**
+       * Action
+       * @enum {string}
+       */
+      action: "pause" | "resume" | "cancel";
     };
     /** CreateProject */
     CreateProject: {
@@ -319,6 +579,35 @@ export interface components {
       /** Revoked */
       revoked: boolean;
     };
+    /** OutboxDelivery */
+    OutboxDelivery: {
+      /** Event Id */
+      event_id: string;
+      /** Kind */
+      kind: string;
+      /**
+       * Transport Status
+       * @enum {string}
+       */
+      transport_status: "PENDING" | "SENT" | "DEAD";
+      /** Attempts */
+      attempts: number;
+      /** Consumed */
+      consumed: boolean;
+      /** Error */
+      error: string | null;
+    };
+    /** OutboxStatus */
+    OutboxStatus: {
+      /** Pending */
+      pending: number;
+      /** Dead Letters */
+      dead_letters: number;
+      /** Last Worker Seen At */
+      last_worker_seen_at: string | null;
+      /** Last Dispatcher Seen At */
+      last_dispatcher_seen_at: string | null;
+    };
     /** PairRequest */
     PairRequest: {
       /** Pairing Code */
@@ -373,6 +662,99 @@ export interface components {
        */
       max_seconds?: number;
     };
+    /** ProductionRun */
+    ProductionRun: {
+      /** Production Run Id */
+      production_run_id: string;
+      /** Project Id */
+      project_id: string;
+      /** Snapshot Id */
+      snapshot_id: string;
+      /**
+       * Execution Mode
+       * @default simulation
+       * @constant
+       */
+      execution_mode?: "simulation";
+      /** Workflow Id */
+      workflow_id: string;
+      /** Temporal Run Id */
+      temporal_run_id: string | null;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status:
+        | "CREATED"
+        | "PREPARING"
+        | "RENDERING"
+        | "COMPLETED"
+        | "PAUSED"
+        | "FAILED"
+        | "CANCEL_REQUESTED"
+        | "CANCELLED";
+      /** Stage */
+      stage: string;
+      /** Pause Requested */
+      pause_requested: boolean;
+      /** Row Version */
+      row_version: number;
+      /** Control Seq */
+      control_seq: number;
+      /** Completed Shots */
+      completed_shots: number;
+      /** Total Shots */
+      total_shots: number;
+      /** Error */
+      error: string | null;
+      /** Created At */
+      created_at: string;
+      /** Updated At */
+      updated_at: string;
+    };
+    /** ProductionRunDetail */
+    ProductionRunDetail: {
+      run: components["schemas"]["ProductionRun"];
+      snapshot: components["schemas"]["ProductionSnapshot"];
+      /** Steps */
+      steps: components["schemas"]["SimulationStep"][];
+      /** Deliveries */
+      deliveries?: components["schemas"]["OutboxDelivery"][];
+    };
+    /** ProductionSnapshot */
+    ProductionSnapshot: {
+      /** Snapshot Id */
+      snapshot_id: string;
+      /** Project Id */
+      project_id: string;
+      /**
+       * Execution Mode
+       * @default simulation
+       * @constant
+       */
+      execution_mode?: "simulation";
+      /**
+       * Profile Ref
+       * @default narrated-portrait/v1
+       * @constant
+       */
+      profile_ref?: "narrated-portrait/v1";
+      /**
+       * Schema Version
+       * @default 1
+       * @constant
+       */
+      schema_version?: 1;
+      input_refs: components["schemas"]["RunInputs"];
+      /** Contents */
+      contents: components["schemas"]["ContentRevision"][];
+      /** Approval Ids */
+      approval_ids: string[];
+      /** Digest */
+      digest: string;
+      /** Created At */
+      created_at: string;
+    };
     /** Project */
     Project: {
       /** Project Id */
@@ -405,7 +787,31 @@ export interface components {
        * Type
        * @enum {string}
        */
-      type: "project.created" | "project.updated";
+      type:
+        | "project.created"
+        | "project.updated"
+        | "content.saved"
+        | "content.reviewed"
+        | "run.created"
+        | "run.control_requested"
+        | "run.updated"
+        | "run.step_completed";
+      /**
+       * Schema Version
+       * @default 1
+       */
+      schema_version?: number;
+      /** Subject Ref */
+      subject_ref?:
+        | components["schemas"]["ProjectRef"]
+        | components["schemas"]["ContentRef"]
+        | components["schemas"]["ApprovalRef"]
+        | components["schemas"]["RunRef"]
+        | null;
+      /** Payload */
+      payload?: {
+        [key: string]: unknown;
+      };
       /** Project Id */
       project_id: string;
       /** Row Version */
@@ -440,6 +846,179 @@ export interface components {
       project: components["schemas"]["Project"];
       /** Event Cursor */
       event_cursor: number;
+      /** Contents */
+      contents?: components["schemas"]["ContentHead"][];
+      /** Approvals */
+      approvals?: components["schemas"]["Approval"][];
+      /** Production Runs */
+      production_runs?: components["schemas"]["ProductionRun"][];
+    };
+    /** RevisionPage */
+    RevisionPage: {
+      /** Items */
+      items: components["schemas"]["ContentRevision"][];
+      /** Next Before */
+      next_before: number | null;
+    };
+    /** RunInputs */
+    RunInputs: {
+      brief: components["schemas"]["ContentRef"];
+      script: components["schemas"]["ContentRef"];
+      storyboard: components["schemas"]["ContentRef"];
+    } & {
+      brief: {
+        /** @constant */
+        entity_kind?: "brief";
+      };
+      script: {
+        /** @constant */
+        entity_kind?: "script";
+      };
+      storyboard: {
+        /** @constant */
+        entity_kind?: "storyboard";
+      };
+    };
+    /** RunRef */
+    RunRef: {
+      /**
+       * Kind
+       * @default production_run
+       * @constant
+       */
+      kind?: "production_run";
+      /** Production Run Id */
+      production_run_id: string;
+      /** Snapshot Id */
+      snapshot_id: string;
+    };
+    /** SaveRevision */
+    SaveRevision: {
+      /** Command Id */
+      command_id: string;
+      /**
+       * Entity Kind
+       * @enum {string}
+       */
+      entity_kind: "brief" | "script" | "storyboard";
+      /** Expected Row Version */
+      expected_row_version: number;
+      /** Payload */
+      payload:
+        | components["schemas"]["BriefContent"]
+        | components["schemas"]["ScriptContent"]
+        | components["schemas"]["StoryboardContent"];
+    } & (unknown & unknown & unknown);
+    /** ScriptContent */
+    ScriptContent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "script";
+      brief_ref?: components["schemas"]["ContentRef"] | null;
+      /** Segments */
+      segments?: components["schemas"]["ScriptSegment"][];
+    };
+    /** ScriptSegment */
+    ScriptSegment: {
+      /** Segment Id */
+      segment_id: string;
+      /**
+       * Spoken Text
+       * @default
+       */
+      spoken_text?: string;
+      /**
+       * Visual Description
+       * @default
+       */
+      visual_description?: string;
+    };
+    /** SimulationStep */
+    SimulationStep: {
+      /** Operation Id */
+      operation_id: string;
+      /** Stage */
+      stage: string;
+      /** Shot Id */
+      shot_id?: string | null;
+      /** Result */
+      result: {
+        [key: string]: unknown;
+      };
+      /** Completed At */
+      completed_at: string;
+    };
+    /** StartProductionRun */
+    StartProductionRun: {
+      /** Command Id */
+      command_id: string;
+      /**
+       * Execution Mode
+       * @constant
+       */
+      execution_mode: "simulation";
+      input_refs: components["schemas"]["RunInputs"];
+      /** Expected Row Version */
+      expected_row_version: number;
+    };
+    /** StoryboardContent */
+    StoryboardContent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "storyboard";
+      script_ref?: components["schemas"]["ContentRef"] | null;
+      /**
+       * Fps
+       * @default 24
+       * @constant
+       */
+      fps?: 24;
+      /** Shots */
+      shots?: components["schemas"]["StoryboardShot"][];
+    };
+    /** StoryboardShot */
+    StoryboardShot: {
+      /** Shot Id */
+      shot_id: string;
+      /** Segment Ids */
+      segment_ids?: string[];
+      /**
+       * Intent
+       * @default
+       */
+      intent?: string;
+      /**
+       * Camera
+       * @default
+       */
+      camera?: string;
+      /**
+       * Duration Frames
+       * @default 240
+       */
+      duration_frames?: number;
+    };
+    /** SubmitApproval */
+    SubmitApproval: {
+      /** Command Id */
+      command_id: string;
+      subject_ref: components["schemas"]["ContentRef"];
+      /** Expected Row Version */
+      expected_row_version: number;
+      /**
+       * Decision
+       * @enum {string}
+       */
+      decision: "APPROVED" | "REJECTED" | "REVOKED";
+      /**
+       * Comment
+       * @default
+       */
+      comment?: string;
     };
     /** UpdateProject */
     UpdateProject: {
@@ -1208,6 +1787,560 @@ export interface operations {
       };
     };
   };
+  listRevisions: {
+    parameters: {
+      query: {
+        entity_kind: "brief" | "script" | "storyboard";
+        before?: number | null;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RevisionPage"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  saveRevision: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SaveRevision"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommandResult"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  listApprovals: {
+    parameters: {
+      query?: {
+        revision_id?: string | null;
+      };
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApprovalPage"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  submitApproval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SubmitApproval"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommandResult"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  startProductionRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["StartProductionRun"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommandResult"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  getProductionRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductionRunDetail"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  controlProductionRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ControlProductionRun"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommandResult"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
   getCapabilities: {
     parameters: {
       query?: never;
@@ -1224,6 +2357,80 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Capabilities"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  getExecutionStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OutboxStatus"];
         };
       };
       /** @description Unauthorized */

@@ -1,0 +1,42 @@
+{
+  "feature_id": "G04-F05",
+  "design_revision": {
+    "path": "视频生产开发文档/04-持久化编排取消与恢复.md",
+    "sha256_lf": "3364327b4b0551921763816fdbb56394f0fee4ca95d9c5c93e69b0bcb8f1065f",
+    "approved_implementation_scope_ref": "docs/b1-first-part.md"
+  },
+  "status": "IMPLEMENTING",
+  "verified_subset": {
+    "milestone": "B1 part 01",
+    "status": "VERIFIED",
+    "description": "真实持久化 Temporal 上的模拟制作、暂停/恢复/取消、幂等 Activity、故障恢复及 V1 历史重放。",
+    "report_ref": "evidence/reports/b1-verification.json"
+  },
+  "source_base_commit": "85e63c7580c34feefe7de86e93fd9116b209e9f5",
+  "implementation_paths": [
+    "backend/src/video_generation/orchestration/production.py",
+    "backend/src/video_generation/orchestration/activities.py",
+    "backend/src/video_generation/application/simulation.py",
+    "backend/src/video_generation/workers/dispatcher.py",
+    "backend/src/video_generation/workers/temporal.py"
+  ],
+  "contract_test_refs": [
+    "backend/tests/test_contracts.py",
+    "frontend/tests/contracts.test.ts"
+  ],
+  "failure_test_refs": [
+    "backend/tests/test_simulation.py",
+    "backend/tests/test_temporal.py",
+    "scripts/verify_process_recovery.py"
+  ],
+  "manual_review": {
+    "reviewer": "Codex",
+    "scope": "Implementation review and actual desktop screenshots; no user or media-quality acceptance claimed",
+    "ref": "docs/b1-verification.md"
+  },
+  "known_limits": [
+    "未覆盖创作 Agent、真实外部未知结果、审片/合成、Worker 滚动升级与 Continue-As-New。",
+    "完整功能仍在实施中；本轮完成不表示整个 G03/G04/G14 或 B1 已完成。"
+  ],
+  "release_manifest_ref": "release-manifest.json"
+}

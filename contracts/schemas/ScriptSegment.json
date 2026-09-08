@@ -1,0 +1,28 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "segment_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Segment Id",
+      "type": "string"
+    },
+    "spoken_text": {
+      "default": "",
+      "maxLength": 20000,
+      "title": "Spoken Text",
+      "type": "string"
+    },
+    "visual_description": {
+      "default": "",
+      "maxLength": 20000,
+      "title": "Visual Description",
+      "type": "string"
+    }
+  },
+  "required": [
+    "segment_id"
+  ],
+  "title": "ScriptSegment",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

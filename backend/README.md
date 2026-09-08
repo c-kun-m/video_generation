@@ -44,6 +44,8 @@ API 的启动路径统一进入 `serve()`，保留 Windows / psycopg 所需的 S
 
 ## 常见错误
 
+B1 新增 **Video Temporal Worker**、**Video Outbox Dispatcher**、**Video Initialize Temporal** 共享配置，模块仍为 `video_generation`，参数分别为 `worker`、`dispatcher`、`init-temporal`。保持同一 `.venv` 解释器和 `src` Sources Root；先运行根目录 `scripts/dev.ps1 infra`。完整用法见 [B1 第一部分](../docs/b1-first-part.md)。
+
 - `No module named video_generation`：检查运行配置的解释器是否就是 `.venv`，并重新执行 `uv sync --frozen`。仅把 Working directory 改为仓库根目录不能替代包安装。
 - `No module named uvicorn / sqlalchemy`：运行配置使用了另一套未安装依赖的 Python。
 - 编辑器导入标红而运行正常：检查 `src` 的 Sources Root 标记，重新选择正确解释器并等待索引完成。

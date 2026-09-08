@@ -1,16 +1,37 @@
+# Re-export the wire models for the contract exporter and generated clients.
+# ruff: noqa: F401
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import ConfigDict, Field, StringConstraints, model_validator
 
-Identifier = Annotated[
-    str,
-    StringConstraints(pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"),
-]
+from video_generation.contracts.common import Contract, Identifier
+from video_generation.contracts.content import (
+    Approval,
+    ApprovalPage,
+    ApprovalRef,
+    BriefContent,
+    ContentHead,
+    ContentRef,
+    ContentRevision,
+    ControlProductionRun,
+    OutboxStatus,
+    ProductionRun,
+    ProductionRunDetail,
+    ProductionSnapshot,
+    RevisionPage,
+    RunInputs,
+    RunRef,
+    SaveRevision,
+    ScriptContent,
+    ScriptSegment,
+    SimulationStep,
+    StartProductionRun,
+    StoryboardContent,
+    StoryboardShot,
+    SubmitApproval,
+)
+
 Title = Annotated[str, StringConstraints(pattern=r"\S", min_length=1, max_length=200)]
-
-
-class Contract(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
 
 
 class FieldIssue(Contract):
@@ -128,8 +149,8 @@ class ProjectRef(Contract):
 
 class CommandResult(Contract):
     command_id: Identifier
-    status: Literal["APPLIED", "REJECTED"]
-    business_result_ref: ProjectRef | None = None
+    status: Literal["ACCEPTED", "APPLIED", "REJECTED"]
+    business_result_ref: ProjectRef | ContentRef | ApprovalRef | RunRef | None = None
     project: Project | None = None
     error: ErrorDetail | None = None
 
@@ -143,12 +164,27 @@ class ProjectPage(Contract):
 class ProjectSnapshot(Contract):
     project: Project
     event_cursor: int
+    contents: list[ContentHead] = Field(default_factory=list)
+    approvals: list[Approval] = Field(default_factory=list)
+    production_runs: list[ProductionRun] = Field(default_factory=list)
 
 
 class ProjectEvent(Contract):
     event_id: Identifier
     seq: int
-    type: Literal["project.created", "project.updated"]
+    type: Literal[
+        "project.created",
+        "project.updated",
+        "content.saved",
+        "content.reviewed",
+        "run.created",
+        "run.control_requested",
+        "run.updated",
+        "run.step_completed",
+    ]
+    schema_version: int = 1
+    subject_ref: ProjectRef | ContentRef | ApprovalRef | RunRef | None = None
+    payload: dict = Field(default_factory=dict)
     project_id: Identifier
     row_version: int
     causation_command_id: Identifier

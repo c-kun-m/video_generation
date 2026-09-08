@@ -1,0 +1,120 @@
+{
+  "$defs": {
+    "Approval": {
+      "additionalProperties": false,
+      "properties": {
+        "approval_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Approval Id",
+          "type": "string"
+        },
+        "project_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Project Id",
+          "type": "string"
+        },
+        "subject_ref": {
+          "$ref": "#/$defs/ContentRef"
+        },
+        "decision": {
+          "enum": [
+            "APPROVED",
+            "REJECTED",
+            "REVOKED"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "policy_version": {
+          "const": "manual-content/v1",
+          "default": "manual-content/v1",
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "comment": {
+          "title": "Comment",
+          "type": "string"
+        },
+        "actor_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "command_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Command Id",
+          "type": "string"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "approval_id",
+        "project_id",
+        "subject_ref",
+        "decision",
+        "comment",
+        "actor_id",
+        "command_id",
+        "created_at"
+      ],
+      "title": "Approval",
+      "type": "object"
+    },
+    "ContentRef": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "content",
+          "default": "content",
+          "title": "Kind",
+          "type": "string"
+        },
+        "entity_kind": {
+          "enum": [
+            "brief",
+            "script",
+            "storyboard"
+          ],
+          "title": "Entity Kind",
+          "type": "string"
+        },
+        "revision_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_kind",
+        "revision_id",
+        "digest"
+      ],
+      "title": "ContentRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/Approval"
+      },
+      "title": "Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "title": "ApprovalPage",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,0 +1,420 @@
+{
+  "$defs": {
+    "BriefContent": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "brief",
+          "default": "brief",
+          "title": "Kind",
+          "type": "string"
+        },
+        "theme": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Theme",
+          "type": "string"
+        },
+        "audience": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Audience",
+          "type": "string"
+        },
+        "purpose": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Purpose",
+          "type": "string"
+        },
+        "style": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Style",
+          "type": "string"
+        },
+        "constraints": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Constraints",
+          "type": "string"
+        }
+      },
+      "title": "BriefContent",
+      "type": "object"
+    },
+    "ContentRef": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "content",
+          "default": "content",
+          "title": "Kind",
+          "type": "string"
+        },
+        "entity_kind": {
+          "enum": [
+            "brief",
+            "script",
+            "storyboard"
+          ],
+          "title": "Entity Kind",
+          "type": "string"
+        },
+        "revision_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_kind",
+        "revision_id",
+        "digest"
+      ],
+      "title": "ContentRef",
+      "type": "object"
+    },
+    "ContentRevision": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "$ref": "#/$defs/ContentRef"
+        },
+        "project_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Project Id",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "parent_revision_id": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parent Revision Id"
+        },
+        "payload": {
+          "discriminator": {
+            "mapping": {
+              "brief": "#/$defs/BriefContent",
+              "script": "#/$defs/ScriptContent",
+              "storyboard": "#/$defs/StoryboardContent"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BriefContent"
+            },
+            {
+              "$ref": "#/$defs/ScriptContent"
+            },
+            {
+              "$ref": "#/$defs/StoryboardContent"
+            }
+          ],
+          "title": "Payload"
+        },
+        "created_by": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Created By",
+          "type": "string"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "ref",
+        "project_id",
+        "revision",
+        "parent_revision_id",
+        "payload",
+        "created_by",
+        "created_at"
+      ],
+      "title": "ContentRevision",
+      "type": "object"
+    },
+    "RunInputs": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "properties": {
+            "brief": {
+              "properties": {
+                "entity_kind": {
+                  "const": "brief"
+                }
+              }
+            },
+            "script": {
+              "properties": {
+                "entity_kind": {
+                  "const": "script"
+                }
+              }
+            },
+            "storyboard": {
+              "properties": {
+                "entity_kind": {
+                  "const": "storyboard"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "brief": {
+          "$ref": "#/$defs/ContentRef"
+        },
+        "script": {
+          "$ref": "#/$defs/ContentRef"
+        },
+        "storyboard": {
+          "$ref": "#/$defs/ContentRef"
+        }
+      },
+      "required": [
+        "brief",
+        "script",
+        "storyboard"
+      ],
+      "title": "RunInputs",
+      "type": "object"
+    },
+    "ScriptContent": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "script",
+          "default": "script",
+          "title": "Kind",
+          "type": "string"
+        },
+        "brief_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContentRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "segments": {
+          "items": {
+            "$ref": "#/$defs/ScriptSegment"
+          },
+          "maxItems": 100,
+          "title": "Segments",
+          "type": "array"
+        }
+      },
+      "title": "ScriptContent",
+      "type": "object"
+    },
+    "ScriptSegment": {
+      "additionalProperties": false,
+      "properties": {
+        "segment_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Segment Id",
+          "type": "string"
+        },
+        "spoken_text": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Spoken Text",
+          "type": "string"
+        },
+        "visual_description": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Visual Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "segment_id"
+      ],
+      "title": "ScriptSegment",
+      "type": "object"
+    },
+    "StoryboardContent": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "storyboard",
+          "default": "storyboard",
+          "title": "Kind",
+          "type": "string"
+        },
+        "script_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContentRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fps": {
+          "const": 24,
+          "default": 24,
+          "title": "Fps",
+          "type": "integer"
+        },
+        "shots": {
+          "items": {
+            "$ref": "#/$defs/StoryboardShot"
+          },
+          "maxItems": 8,
+          "title": "Shots",
+          "type": "array"
+        }
+      },
+      "title": "StoryboardContent",
+      "type": "object"
+    },
+    "StoryboardShot": {
+      "additionalProperties": false,
+      "properties": {
+        "shot_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Shot Id",
+          "type": "string"
+        },
+        "segment_ids": {
+          "items": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "maxItems": 100,
+          "title": "Segment Ids",
+          "type": "array"
+        },
+        "intent": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Intent",
+          "type": "string"
+        },
+        "camera": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Camera",
+          "type": "string"
+        },
+        "duration_frames": {
+          "default": 240,
+          "maximum": 1440,
+          "minimum": 1,
+          "title": "Duration Frames",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "shot_id"
+      ],
+      "title": "StoryboardShot",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "snapshot_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "project_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "execution_mode": {
+      "const": "simulation",
+      "default": "simulation",
+      "title": "Execution Mode",
+      "type": "string"
+    },
+    "profile_ref": {
+      "const": "narrated-portrait/v1",
+      "default": "narrated-portrait/v1",
+      "title": "Profile Ref",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "input_refs": {
+      "$ref": "#/$defs/RunInputs"
+    },
+    "contents": {
+      "items": {
+        "$ref": "#/$defs/ContentRevision"
+      },
+      "title": "Contents",
+      "type": "array"
+    },
+    "approval_ids": {
+      "items": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "title": "Approval Ids",
+      "type": "array"
+    },
+    "digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Digest",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "snapshot_id",
+    "project_id",
+    "input_refs",
+    "contents",
+    "approval_ids",
+    "digest",
+    "created_at"
+  ],
+  "title": "ProductionSnapshot",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

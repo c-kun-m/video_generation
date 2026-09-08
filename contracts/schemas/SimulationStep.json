@@ -1,0 +1,44 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "operation_id": {
+      "title": "Operation Id",
+      "type": "string"
+    },
+    "stage": {
+      "title": "Stage",
+      "type": "string"
+    },
+    "shot_id": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Shot Id"
+    },
+    "result": {
+      "additionalProperties": true,
+      "title": "Result",
+      "type": "object"
+    },
+    "completed_at": {
+      "title": "Completed At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "operation_id",
+    "stage",
+    "result",
+    "completed_at"
+  ],
+  "title": "SimulationStep",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

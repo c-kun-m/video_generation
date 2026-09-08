@@ -5,8 +5,8 @@ import pytest
 from sqlalchemy.engine import make_url
 
 from video_generation.api.app import create_app
+from video_generation.application.auth import initialize_owner
 from video_generation.config import Settings
-from video_generation.domain.auth import initialize_owner
 from video_generation.runtime import loop_factory
 
 

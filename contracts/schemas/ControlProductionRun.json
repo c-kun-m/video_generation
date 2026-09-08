@@ -1,0 +1,26 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "command_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Command Id",
+      "type": "string"
+    },
+    "action": {
+      "enum": [
+        "pause",
+        "resume",
+        "cancel"
+      ],
+      "title": "Action",
+      "type": "string"
+    }
+  },
+  "required": [
+    "command_id",
+    "action"
+  ],
+  "title": "ControlProductionRun",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

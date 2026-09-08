@@ -1,0 +1,38 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "content",
+      "default": "content",
+      "title": "Kind",
+      "type": "string"
+    },
+    "entity_kind": {
+      "enum": [
+        "brief",
+        "script",
+        "storyboard"
+      ],
+      "title": "Entity Kind",
+      "type": "string"
+    },
+    "revision_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Revision Id",
+      "type": "string"
+    },
+    "digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Digest",
+      "type": "string"
+    }
+  },
+  "required": [
+    "entity_kind",
+    "revision_id",
+    "digest"
+  ],
+  "title": "ContentRef",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

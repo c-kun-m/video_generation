@@ -1,0 +1,15 @@
+{
+  "suite": "b1-process-recovery",
+  "cases": [
+    "API exited after DB commit before HTTP response; original command/run recovered",
+    "Temporal Server and its PostgreSQL container restarted with volumes retained",
+    "Dispatcher exited after send before delivery ACK; lease expiry re-delivered same workflow",
+    "Worker exited after step DB commit before Activity response; retry kept one step result",
+    "Paused workflow resumed with original Temporal run id, snapshot and four unique final results"
+  ],
+  "verified_at": "2026-09-08T10:35:09+0800",
+  "project_id": "0cf31d1a-3154-4fb7-8eca-e0fd94ac2d2b",
+  "production_run_id": "003a2c0c-4ec1-42ff-9c19-ca1e49da00ad",
+  "temporal_run_id": "01a07ede-14ff-7e24-8370-af47117d960c",
+  "snapshot_id": "421d063b-239a-45cc-928a-bd40c93d1f8b"
+}

@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Video Temporal Worker" type="PythonConfigurationType" factoryName="Python">
+    <module name="backend" />
+    <option name="SCRIPT_NAME" value="video_generation" />
+    <option name="MODULE_MODE" value="true" />
+    <option name="PARAMETERS" value="worker" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="IS_MODULE_SDK" value="true" />
+    <option name="ADD_CONTENT_ROOTS" value="false" />
+    <option name="ADD_SOURCE_ROOTS" value="false" />
+    <envs><env name="PYTHONUNBUFFERED" value="1" /></envs>
+    <method v="2" />
+  </configuration>
+</component>

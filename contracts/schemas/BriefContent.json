@@ -1,0 +1,44 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "brief",
+      "default": "brief",
+      "title": "Kind",
+      "type": "string"
+    },
+    "theme": {
+      "default": "",
+      "maxLength": 20000,
+      "title": "Theme",
+      "type": "string"
+    },
+    "audience": {
+      "default": "",
+      "maxLength": 20000,
+      "title": "Audience",
+      "type": "string"
+    },
+    "purpose": {
+      "default": "",
+      "maxLength": 20000,
+      "title": "Purpose",
+      "type": "string"
+    },
+    "style": {
+      "default": "",
+      "maxLength": 20000,
+      "title": "Style",
+      "type": "string"
+    },
+    "constraints": {
+      "default": "",
+      "maxLength": 20000,
+      "title": "Constraints",
+      "type": "string"
+    }
+  },
+  "title": "BriefContent",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

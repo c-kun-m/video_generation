@@ -1,6 +1,12 @@
 import createClient from "openapi-fetch";
 import type { paths } from "../shared/api.generated";
-import type { Fault, Schema, Operation } from "../shared/bridge";
+import type {
+  Fault,
+  Schema,
+  Operation,
+  LocalDraft,
+  ContentKind,
+} from "../shared/bridge";
 import { Vault, type SavedCommand } from "./vault";
 
 export class ServiceError extends Error {
@@ -64,17 +70,57 @@ export class Service {
     command: SavedCommand,
   ): Promise<Schema["CommandResult"]> {
     try {
-      const result =
-        command.kind === "create"
-          ? await this.unwrap(
-              this.client.POST("/video/v1/projects", { body: command.body }),
-            )
-          : await this.unwrap(
-              this.client.PATCH("/video/v1/projects/{project_id}", {
+      let result: Schema["CommandResult"];
+      switch (command.kind) {
+        case "create":
+          result = await this.unwrap(
+            this.client.POST("/video/v1/projects", { body: command.body }),
+          );
+          break;
+        case "update":
+          result = await this.unwrap(
+            this.client.PATCH("/video/v1/projects/{project_id}", {
+              params: { path: { project_id: command.project_id } },
+              body: command.body,
+            }),
+          );
+          break;
+        case "saveRevision":
+          result = await this.unwrap(
+            this.client.POST("/video/v1/projects/{project_id}/revisions", {
+              params: { path: { project_id: command.project_id } },
+              body: command.body,
+            }),
+          );
+          break;
+        case "submitApproval":
+          result = await this.unwrap(
+            this.client.POST("/video/v1/projects/{project_id}/approvals", {
+              params: { path: { project_id: command.project_id } },
+              body: command.body,
+            }),
+          );
+          break;
+        case "startRun":
+          result = await this.unwrap(
+            this.client.POST(
+              "/video/v1/projects/{project_id}/production-runs",
+              {
                 params: { path: { project_id: command.project_id } },
                 body: command.body,
-              }),
-            );
+              },
+            ),
+          );
+          break;
+        case "controlRun":
+          result = await this.unwrap(
+            this.client.POST("/video/v1/production-runs/{run_id}/commands", {
+              params: { path: { run_id: command.run_id } },
+              body: command.body,
+            }),
+          );
+          break;
+      }
       this.removePending(command.body.command_id);
       return result;
     } catch (error) {
@@ -106,7 +152,17 @@ export class Service {
     return this.execute(command);
   }
   async dispatch(operation: Operation, input: unknown): Promise<unknown> {
-    const writes = ["pair", "logout", "create", "update", "recover"];
+    const writes = [
+      "pair",
+      "logout",
+      "create",
+      "update",
+      "recover",
+      "saveRevision",
+      "submitApproval",
+      "startRun",
+      "controlRun",
+    ];
     if (!writes.includes(operation))
       return this.executeOperation(operation, input);
     if (this.mutating)
@@ -131,7 +187,14 @@ export class Service {
           identity: this.vault.data.identity,
           pending: (this.mutating ? [] : this.vault.data.pending).map((x) => ({
             command_id: x.body.command_id,
-            label: x.kind === "create" ? "创建项目" : "修改项目",
+            label: {
+              create: "创建项目",
+              update: "修改项目",
+              saveRevision: "保存内容",
+              submitApproval: "审批版本",
+              startRun: "启动演练",
+              controlRun: "控制演练",
+            }[x.kind],
           })),
           version: this.version,
         };
@@ -175,6 +238,7 @@ export class Service {
           token: result.access_token,
           identity: result.identity,
           pending: old.pending,
+          drafts: old.drafts ?? {},
         };
         this.vault.save();
         return result.identity;
@@ -197,6 +261,10 @@ export class Service {
         return this.unwrap(this.client.GET("/video/v1/me"));
       case "capabilities":
         return this.unwrap(this.client.GET("/video/v1/system/capabilities"));
+      case "executionStatus":
+        return this.unwrap(
+          this.client.GET("/video/v1/system/execution-status"),
+        );
       case "projects":
         return this.unwrap(
           this.client.GET("/video/v1/projects", {
@@ -231,6 +299,107 @@ export class Service {
           command: Schema["UpdateProject"];
         };
         return this.write({ kind: "update", project_id, body: command });
+      }
+      case "saveRevision": {
+        const { project_id, command } = input as {
+          project_id: string;
+          command: Schema["SaveRevision"];
+        };
+        return this.write({ kind: "saveRevision", project_id, body: command });
+      }
+      case "submitApproval": {
+        const { project_id, command } = input as {
+          project_id: string;
+          command: Schema["SubmitApproval"];
+        };
+        return this.write({
+          kind: "submitApproval",
+          project_id,
+          body: command,
+        });
+      }
+      case "startRun": {
+        const { project_id, command } = input as {
+          project_id: string;
+          command: Schema["StartProductionRun"];
+        };
+        return this.write({ kind: "startRun", project_id, body: command });
+      }
+      case "controlRun": {
+        const { run_id, command } = input as {
+          run_id: string;
+          command: Schema["ControlProductionRun"];
+        };
+        return this.write({ kind: "controlRun", run_id, body: command });
+      }
+      case "revisions": {
+        const { project_id, ...query } = input as {
+          project_id: string;
+          entity_kind: ContentKind;
+          before?: number;
+        };
+        return this.unwrap(
+          this.client.GET("/video/v1/projects/{project_id}/revisions", {
+            params: { path: { project_id }, query },
+          }),
+        );
+      }
+      case "approvals": {
+        const { project_id, ...query } = input as {
+          project_id: string;
+          revision_id?: string;
+        };
+        return this.unwrap(
+          this.client.GET("/video/v1/projects/{project_id}/approvals", {
+            params: { path: { project_id }, query },
+          }),
+        );
+      }
+      case "run":
+        return this.unwrap(
+          this.client.GET("/video/v1/production-runs/{run_id}", {
+            params: { path: input as { run_id: string } },
+          }),
+        );
+      case "command":
+        return this.unwrap(
+          this.client.GET("/video/v1/commands/{command_id}", {
+            params: { path: input as { command_id: string } },
+          }),
+        );
+      case "getDraft":
+      case "saveDraft":
+      case "deleteDraft": {
+        this.requireSession();
+        const identity = this.vault.data.identity;
+        if (!identity)
+          throw new ServiceError(
+            fault("UNAUTHENTICATED", "请先配对本机设备。"),
+          );
+        const draft = input as LocalDraft;
+        const key = [
+          identity.tenant_id,
+          identity.actor_id,
+          draft.project_id,
+          draft.entity_kind,
+        ].join("/");
+        const drafts = (this.vault.data.drafts ??= {});
+        if (operation === "getDraft") return drafts[key] ?? null;
+        if (operation === "saveDraft") {
+          if (draft.payload.kind !== draft.entity_kind)
+            throw new ServiceError(
+              fault("VALIDATION_FAILED", "草稿类型不匹配。"),
+            );
+          drafts[key] = draft;
+          this.vault.save();
+          return draft;
+        }
+        const matches = drafts[key]?.updated_at === draft.updated_at;
+        if (matches) {
+          delete drafts[key];
+          this.vault.save();
+        }
+        return { deleted: matches };
       }
       case "recover": {
         this.requireSession();

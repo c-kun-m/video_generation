@@ -55,6 +55,7 @@ const profile = mkdtempSync(join(root, "runtime/verification/desktop-"));
 env.VIDEO_DESKTOP_DATA_DIR = profile;
 let api: ChildProcess;
 let desktop: ElectronApplication | undefined;
+const background: ChildProcess[] = [];
 async function startApi() {
   const log = openSync(join(root, "runtime/verification/e2e-api.log"), "a");
   api = spawn(
@@ -73,12 +74,26 @@ async function startApi() {
     })
     .toBe(200);
 }
+async function stopChild(child: ChildProcess | undefined) {
+  if (!child || child.exitCode !== null || child.signalCode !== null) return;
+  const exited = once(child, "exit");
+  if (process.platform === "win32") {
+    const stopped = spawnSync(
+      "taskkill",
+      ["/PID", String(child.pid), "/T", "/F"],
+      { windowsHide: true, encoding: "utf8" },
+    );
+    if (
+      stopped.status !== 0 &&
+      child.exitCode === null &&
+      child.signalCode === null
+    )
+      throw new Error("Could not terminate the test-owned process tree");
+  } else child.kill("SIGKILL");
+  await exited;
+}
 async function stopApi() {
-  if (api?.exitCode === null) {
-    const exited = once(api, "exit");
-    api.kill();
-    await exited;
-  }
+  await stopChild(api);
 }
 async function launch() {
   desktop = await electron.launch({
@@ -95,6 +110,7 @@ async function launch() {
 test.afterAll(async () => {
   await desktop?.close();
   await stopApi();
+  for (const child of background) await stopChild(child);
 });
 test("real desktop: pairing, CRUD, safe bridge, recovery, conflict and process restart", async () => {
   await startApi();
@@ -256,6 +272,254 @@ test("real desktop: pairing, CRUD, safe bridge, recovery, conflict and process r
   await expect(
     page.getByText("ComfyUI 镜头生成", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("尚未接入", { exact: true })).toHaveCount(4);
+  await expect(page.getByText("尚未接入", { exact: true })).toHaveCount(3);
+  expect(errors).toEqual([]);
+});
+
+test("B1 desktop: drafts, exact-version approval, durable simulation and worker process restart", async () => {
+  test.setTimeout(180000);
+  await desktop?.close();
+  desktop = undefined;
+  await stopApi();
+  env.VIDEO_DATABASE_URL = database.replace(
+    /\/[^/]+$/,
+    "/video_generation_workbench_test",
+  );
+  env.VIDEO_TEMPORAL_NAMESPACE = "video-workbench-tests";
+  env.VIDEO_TEMPORAL_TASK_QUEUE = "video-workbench-e2e";
+  env.VIDEO_SIMULATION_STEP_SECONDS = "5";
+  env.VIDEO_DESKTOP_DATA_DIR = mkdtempSync(
+    join(root, "runtime/verification/workbench-"),
+  );
+  const prepare = spawnSync(python, ["scripts/prepare_test_db.py"], {
+    cwd: root,
+    env: {
+      ...env,
+      VIDEO_DATABASE_URL: configured.VIDEO_DATABASE_URL,
+      VIDEO_TEST_DATABASE_URL: env.VIDEO_DATABASE_URL,
+    },
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  expect(prepare.status, prepare.stderr).toBe(0);
+  const namespace = spawnSync(
+    python,
+    ["-m", "video_generation", "init-temporal"],
+    { cwd: root, env, encoding: "utf8", windowsHide: true },
+  );
+  expect(namespace.status, namespace.stderr).toBe(0);
+  function startBackground(command: "worker" | "dispatcher") {
+    const log = openSync(
+      join(root, `runtime/verification/workbench-${command}.log`),
+      "a",
+    );
+    const child = spawn(python, ["-m", "video_generation", command], {
+      cwd: root,
+      env,
+      windowsHide: true,
+      stdio: ["ignore", log, log],
+    });
+    closeSync(log);
+    background.push(child);
+    return child;
+  }
+  startBackground("dispatcher");
+  let worker = startBackground("worker");
+  await startApi();
+  const invitation = spawnSync(
+    python,
+    ["-m", "video_generation", "init-owner", "--json"],
+    { cwd: root, env, encoding: "utf8", windowsHide: true },
+  );
+  expect(invitation.status).toBe(0);
+  let page = await launch();
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page
+    .getByLabel("一次性配对码")
+    .fill(JSON.parse(invitation.stdout).pairing_code);
+  await page.getByRole("button", { name: "连接工作空间" }).click();
+  await expect(page.getByRole("heading", { name: "项目库." })).toBeVisible();
+  const name = `B1 城市晨光 ${Date.now()}`;
+  await page.getByRole("button", { name: "新建项目", exact: true }).click();
+  await page.getByLabel("项目名称").fill(name);
+  await page.getByRole("button", { name: "创建项目", exact: true }).click();
+  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+  const id = new URL(page.url()).hash.split("/").pop()!;
+  await page.getByRole("button", { name: "填充示例", exact: true }).click();
+  await page
+    .getByLabel("主题", { exact: true })
+    .fill("关闭桌面后仍保留的城市清晨草稿");
+  await expect
+    .poll(async () => {
+      const value = await page.evaluate(
+        (project_id) =>
+          window.video.getDraft({ project_id, entity_kind: "brief" }),
+        id,
+      );
+      return value.ok && value.data?.payload.kind === "brief"
+        ? value.data.payload.theme
+        : null;
+    })
+    .toBe("关闭桌面后仍保留的城市清晨草稿");
+  // A fresh desktop process restores the encrypted draft before any server revision exists.
+  await desktop!.close();
+  desktop = undefined;
+  page = await launch();
+  await page.evaluate((project_id) => {
+    location.hash = `/projects/${project_id}`;
+  }, id);
+  await expect(page.getByLabel("主题", { exact: true })).toHaveValue(
+    "关闭桌面后仍保留的城市清晨草稿",
+  );
+  for (const kind of ["需求", "剧本", "分镜"]) {
+    await page
+      .getByRole("navigation", { name: "创作步骤" })
+      .getByRole("button", { name: new RegExp(kind) })
+      .click();
+    if (kind !== "需求")
+      await page.getByRole("button", { name: "填充示例", exact: true }).click();
+    await page.getByRole("button", { name: "保存新版本", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "批准当前版本", exact: true }),
+    ).toBeEnabled();
+    await page
+      .getByRole("button", { name: "批准当前版本", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "确认提交审批", exact: true })
+      .click();
+    await expect(
+      page
+        .getByRole("navigation", { name: "创作步骤" })
+        .getByRole("button", { name: new RegExp(`${kind}.*已批准`) }),
+    ).toBeVisible();
+  }
+  await page.screenshot({
+    path: join(root, "runtime/verification/b1-storyboard.png"),
+    fullPage: true,
+  });
+  await page
+    .getByRole("navigation", { name: "创作步骤" })
+    .getByRole("button", { name: /模拟演练/ })
+    .click();
+  await page.getByRole("button", { name: "启动模拟演练", exact: true }).click();
+  await page
+    .getByRole("button", { name: "确认冻结并启动", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "模拟处理中", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "暂停演练", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "已暂停", exact: true }),
+  ).toBeVisible();
+  const paused = await page.evaluate(async (project_id) => {
+    const snapshot = await window.video.snapshot({ project_id });
+    if (!snapshot.ok) throw new Error("snapshot unavailable");
+    return snapshot.data.production_runs![0];
+  }, id);
+  expect(paused.completed_shots).toBe(1);
+  // Abruptly kill the actual Python process, then restart it with the same durable services.
+  await stopChild(worker);
+  worker = startBackground("worker");
+  await page.getByRole("button", { name: "恢复演练", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "模拟处理中", exact: true }),
+  ).toBeVisible();
+  // Closing the desktop and stopping the API do not stop the Worker.
+  await desktop!.close();
+  desktop = undefined;
+  await stopApi();
+  await startApi();
+  page = await launch();
+  await page.evaluate((project_id) => {
+    location.hash = `/projects/${project_id}`;
+  }, id);
+  await page
+    .getByRole("navigation", { name: "创作步骤" })
+    .getByRole("button", { name: /模拟演练/ })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "演练完成", exact: true }),
+  ).toBeVisible();
+  const detail = await page.evaluate(
+    (run_id) => window.video.run({ run_id }),
+    paused.production_run_id,
+  );
+  expect(detail.ok).toBe(true);
+  if (!detail.ok) throw new Error(detail.error.message);
+  expect(detail.data.run.temporal_run_id).toBe(paused.temporal_run_id);
+  expect(detail.data.run.snapshot_id).toBe(paused.snapshot_id);
+  expect(detail.data.steps).toHaveLength(4);
+  expect(new Set(detail.data.steps.map((step) => step.operation_id)).size).toBe(
+    4,
+  );
+  await page.screenshot({
+    path: join(root, "runtime/verification/b1-simulation-completed.png"),
+    fullPage: true,
+  });
+  // A new saved version loses approval; the old run continues to point to its original input.
+  await page
+    .getByRole("navigation", { name: "创作步骤" })
+    .getByRole("button", { name: /分镜/ })
+    .click();
+  await page.getByLabel("镜头 1 画面意图").fill("新版本镜头意图");
+  await page.evaluate(async (project_id) => {
+    const view = await window.video.snapshot({ project_id });
+    if (!view.ok) throw new Error("snapshot unavailable");
+    const head = view.data.contents!.find(
+      (h) => h.entity_kind === "storyboard",
+    )!;
+    if (head.current.payload.kind !== "storyboard")
+      throw new Error("wrong content");
+    const payload = structuredClone(head.current.payload);
+    payload.shots![0].intent = "另一窗口保存的镜头";
+    const result = await window.video.saveRevision({
+      project_id,
+      command: {
+        command_id: crypto.randomUUID(),
+        entity_kind: "storyboard",
+        expected_row_version: head.row_version,
+        payload,
+      },
+    });
+    if (!result.ok) throw new Error(result.error.message);
+  }, id);
+  await expect(
+    page.getByText("服务器内容或审批已更新，本地修改已保留。", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("镜头 1 画面意图")).toHaveValue(
+    "新版本镜头意图",
+  );
+  await page
+    .getByRole("button", { name: "查看服务器最新版本", exact: true })
+    .click();
+  await expect(
+    page
+      .getByRole("region", { name: "版本内容预览" })
+      .getByLabel("镜头 1 画面意图"),
+  ).toHaveValue("另一窗口保存的镜头");
+  await page.getByRole("button", { name: "关闭预览", exact: true }).click();
+  await page
+    .getByRole("button", {
+      name: "已核对，保留修改并更新保存基准",
+      exact: true,
+    })
+    .click();
+
+  await page.getByRole("button", { name: "保存新版本", exact: true }).click();
+  await expect(
+    page
+      .getByRole("navigation", { name: "创作步骤" })
+      .getByRole("button", { name: /分镜.*v3.*待审批/ }),
+  ).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "创作步骤" })
+    .getByRole("button", { name: /模拟演练/ })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "启动模拟演练", exact: true }),
+  ).toBeDisabled();
   expect(errors).toEqual([]);
 });

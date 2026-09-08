@@ -1,0 +1,119 @@
+{
+  "$defs": {
+    "ContentRef": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "content",
+          "default": "content",
+          "title": "Kind",
+          "type": "string"
+        },
+        "entity_kind": {
+          "enum": [
+            "brief",
+            "script",
+            "storyboard"
+          ],
+          "title": "Entity Kind",
+          "type": "string"
+        },
+        "revision_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_kind",
+        "revision_id",
+        "digest"
+      ],
+      "title": "ContentRef",
+      "type": "object"
+    },
+    "RunInputs": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "properties": {
+            "brief": {
+              "properties": {
+                "entity_kind": {
+                  "const": "brief"
+                }
+              }
+            },
+            "script": {
+              "properties": {
+                "entity_kind": {
+                  "const": "script"
+                }
+              }
+            },
+            "storyboard": {
+              "properties": {
+                "entity_kind": {
+                  "const": "storyboard"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "brief": {
+          "$ref": "#/$defs/ContentRef"
+        },
+        "script": {
+          "$ref": "#/$defs/ContentRef"
+        },
+        "storyboard": {
+          "$ref": "#/$defs/ContentRef"
+        }
+      },
+      "required": [
+        "brief",
+        "script",
+        "storyboard"
+      ],
+      "title": "RunInputs",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "command_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Command Id",
+      "type": "string"
+    },
+    "execution_mode": {
+      "const": "simulation",
+      "title": "Execution Mode",
+      "type": "string"
+    },
+    "input_refs": {
+      "$ref": "#/$defs/RunInputs"
+    },
+    "expected_row_version": {
+      "minimum": 1,
+      "title": "Expected Row Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "command_id",
+    "execution_mode",
+    "input_refs",
+    "expected_row_version"
+  ],
+  "title": "StartProductionRun",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

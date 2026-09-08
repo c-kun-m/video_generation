@@ -5,10 +5,10 @@ import logging
 
 import uvicorn
 
+from video_generation.application.auth import initialize_owner
 from video_generation.config import Settings
-from video_generation.domain.auth import initialize_owner
+from video_generation.infrastructure.persistence.database import create_database
 from video_generation.runtime import loop_factory
-from video_generation.storage.database import create_database
 
 
 def serve():
@@ -42,6 +42,9 @@ def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(description="Video Generation API and local management")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("serve", help="Start the local API with the supported event loop")
+    sub.add_parser("init-temporal", help="Create the local durable Temporal namespace")
+    sub.add_parser("worker", help="Run the durable simulation Temporal Worker")
+    sub.add_parser("dispatcher", help="Deliver and reconcile PostgreSQL outbox events")
     owner = sub.add_parser(
         "init-owner", help="Initialize local owner and issue a one-time pairing code"
     )
@@ -50,6 +53,19 @@ def main(argv: list[str] | None = None):
     args = parser.parse_args(argv)
     if args.command == "serve":
         serve()
+    elif args.command == "init-temporal":
+        from video_generation.workers.setup import initialize_temporal
+
+        asyncio.run(initialize_temporal(), loop_factory=loop_factory)
+    elif args.command in {"worker", "dispatcher"}:
+        from video_generation.workers.dispatcher import run_dispatcher
+        from video_generation.workers.temporal import run_worker
+
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
+        asyncio.run(
+            run_worker() if args.command == "worker" else run_dispatcher(),
+            loop_factory=loop_factory,
+        )
     elif args.command == "init-owner":
         asyncio.run(_pair(args.name, args.json), loop_factory=loop_factory)
 

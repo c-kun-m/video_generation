@@ -1,4 +1,112 @@
 {
+  "$defs": {
+    "ApprovalRef": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "approval",
+          "default": "approval",
+          "title": "Kind",
+          "type": "string"
+        },
+        "approval_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Approval Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "approval_id"
+      ],
+      "title": "ApprovalRef",
+      "type": "object"
+    },
+    "ContentRef": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "content",
+          "default": "content",
+          "title": "Kind",
+          "type": "string"
+        },
+        "entity_kind": {
+          "enum": [
+            "brief",
+            "script",
+            "storyboard"
+          ],
+          "title": "Entity Kind",
+          "type": "string"
+        },
+        "revision_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_kind",
+        "revision_id",
+        "digest"
+      ],
+      "title": "ContentRef",
+      "type": "object"
+    },
+    "ProjectRef": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "project",
+          "default": "project",
+          "title": "Kind",
+          "type": "string"
+        },
+        "project_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Project Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id"
+      ],
+      "title": "ProjectRef",
+      "type": "object"
+    },
+    "RunRef": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "production_run",
+          "default": "production_run",
+          "title": "Kind",
+          "type": "string"
+        },
+        "production_run_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Production Run Id",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Snapshot Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "production_run_id",
+        "snapshot_id"
+      ],
+      "title": "RunRef",
+      "type": "object"
+    }
+  },
   "additionalProperties": false,
   "properties": {
     "event_id": {
@@ -13,10 +121,47 @@
     "type": {
       "enum": [
         "project.created",
-        "project.updated"
+        "project.updated",
+        "content.saved",
+        "content.reviewed",
+        "run.created",
+        "run.control_requested",
+        "run.updated",
+        "run.step_completed"
       ],
       "title": "Type",
       "type": "string"
+    },
+    "schema_version": {
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "subject_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ProjectRef"
+        },
+        {
+          "$ref": "#/$defs/ContentRef"
+        },
+        {
+          "$ref": "#/$defs/ApprovalRef"
+        },
+        {
+          "$ref": "#/$defs/RunRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Subject Ref"
+    },
+    "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
     },
     "project_id": {
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",

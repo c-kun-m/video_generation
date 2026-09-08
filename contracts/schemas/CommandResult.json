@@ -1,5 +1,63 @@
 {
   "$defs": {
+    "ApprovalRef": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "approval",
+          "default": "approval",
+          "title": "Kind",
+          "type": "string"
+        },
+        "approval_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Approval Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "approval_id"
+      ],
+      "title": "ApprovalRef",
+      "type": "object"
+    },
+    "ContentRef": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "content",
+          "default": "content",
+          "title": "Kind",
+          "type": "string"
+        },
+        "entity_kind": {
+          "enum": [
+            "brief",
+            "script",
+            "storyboard"
+          ],
+          "title": "Entity Kind",
+          "type": "string"
+        },
+        "revision_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_kind",
+        "revision_id",
+        "digest"
+      ],
+      "title": "ContentRef",
+      "type": "object"
+    },
     "ErrorDetail": {
       "additionalProperties": false,
       "properties": {
@@ -145,6 +203,33 @@
       ],
       "title": "ProjectRef",
       "type": "object"
+    },
+    "RunRef": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "production_run",
+          "default": "production_run",
+          "title": "Kind",
+          "type": "string"
+        },
+        "production_run_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Production Run Id",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Snapshot Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "production_run_id",
+        "snapshot_id"
+      ],
+      "title": "RunRef",
+      "type": "object"
     }
   },
   "additionalProperties": false,
@@ -156,6 +241,7 @@
     },
     "status": {
       "enum": [
+        "ACCEPTED",
         "APPLIED",
         "REJECTED"
       ],
@@ -168,10 +254,20 @@
           "$ref": "#/$defs/ProjectRef"
         },
         {
+          "$ref": "#/$defs/ContentRef"
+        },
+        {
+          "$ref": "#/$defs/ApprovalRef"
+        },
+        {
+          "$ref": "#/$defs/RunRef"
+        },
+        {
           "type": "null"
         }
       ],
-      "default": null
+      "default": null,
+      "title": "Business Result Ref"
     },
     "project": {
       "anyOf": [

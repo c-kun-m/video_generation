@@ -5,6 +5,22 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from video_generation import __version__
+from video_generation.application.auth import ActorContext, authenticate, logout, pair_device
+from video_generation.application.content import ContentService
+from video_generation.application.operations import execution_status
+from video_generation.application.production import ProductionService
+from video_generation.application.projects import ProjectService
+from video_generation.contracts.content import (
+    ApprovalPage,
+    ContentKind,
+    ControlProductionRun,
+    OutboxStatus,
+    ProductionRunDetail,
+    RevisionPage,
+    SaveRevision,
+    StartProductionRun,
+    SubmitApproval,
+)
 from video_generation.contracts.models import (
     Capabilities,
     Capability,
@@ -20,9 +36,7 @@ from video_generation.contracts.models import (
     ProjectSnapshot,
     UpdateProject,
 )
-from video_generation.domain.auth import ActorContext, authenticate, logout, pair_device
 from video_generation.domain.errors import DomainError
-from video_generation.domain.projects import ProjectService
 
 router = APIRouter(
     prefix="/video/v1",
@@ -55,6 +69,9 @@ def service(request: Request) -> ProjectService:
 
 
 def command_response(result: CommandResult, status: int, request: Request):
+    from video_generation.workers.faults import crash_if_selected
+
+    crash_if_selected(request.app.state.settings, "api_after_commit", result.command_id)
     if result.status == "REJECTED":
         detail = result.error.model_copy(update={"trace_id": request.state.trace_id})
         return JSONResponse(ErrorResponse(error=detail).model_dump(), status_code=status)
@@ -153,6 +170,111 @@ async def command(command_id: str, request: Request, actor: Authenticated):
     return await service(request).get_command(actor, command_id)
 
 
+@router.post(
+    "/projects/{project_id}/revisions",
+    response_model=CommandResult,
+    status_code=201,
+    operation_id="saveRevision",
+    tags=["content"],
+)
+async def save_revision(
+    project_id: str, body: SaveRevision, request: Request, actor: Authenticated
+):
+    result, status = await ContentService(request.app.state.sessions).save(actor, project_id, body)
+    return command_response(result, status, request)
+
+
+@router.get(
+    "/projects/{project_id}/revisions",
+    response_model=RevisionPage,
+    operation_id="listRevisions",
+    tags=["content"],
+)
+async def revisions(
+    project_id: str,
+    request: Request,
+    actor: Authenticated,
+    entity_kind: ContentKind,
+    before: int | None = Query(default=None, ge=1),
+    limit: int = Query(default=30, ge=1, le=100),
+):
+    return await ContentService(request.app.state.sessions).history(
+        actor, project_id, entity_kind, before, limit
+    )
+
+
+@router.post(
+    "/projects/{project_id}/approvals",
+    response_model=CommandResult,
+    status_code=201,
+    operation_id="submitApproval",
+    tags=["content"],
+)
+async def submit_approval(
+    project_id: str, body: SubmitApproval, request: Request, actor: Authenticated
+):
+    result, status = await ContentService(request.app.state.sessions).approve(
+        actor, project_id, body
+    )
+    return command_response(result, status, request)
+
+
+@router.get(
+    "/projects/{project_id}/approvals",
+    response_model=ApprovalPage,
+    operation_id="listApprovals",
+    tags=["content"],
+)
+async def approvals(
+    project_id: str, request: Request, actor: Authenticated, revision_id: str | None = None
+):
+    return await ContentService(request.app.state.sessions).approvals(
+        actor, project_id, revision_id
+    )
+
+
+@router.post(
+    "/projects/{project_id}/production-runs",
+    response_model=CommandResult,
+    status_code=202,
+    operation_id="startProductionRun",
+    tags=["production"],
+)
+async def start_run(
+    project_id: str, body: StartProductionRun, request: Request, actor: Authenticated
+):
+    result, status = await ProductionService(request.app.state.sessions).start(
+        actor, project_id, body
+    )
+    return command_response(result, status, request)
+
+
+@router.get(
+    "/production-runs/{run_id}",
+    response_model=ProductionRunDetail,
+    operation_id="getProductionRun",
+    tags=["production"],
+)
+async def run_detail(run_id: str, request: Request, actor: Authenticated):
+    return await ProductionService(request.app.state.sessions).detail(actor, run_id)
+
+
+@router.post(
+    "/production-runs/{run_id}/commands",
+    response_model=CommandResult,
+    status_code=202,
+    operation_id="controlProductionRun",
+    tags=["production"],
+)
+async def control_run(
+    run_id: str, body: ControlProductionRun, request: Request, actor: Authenticated
+):
+    result, status = await ProductionService(request.app.state.sessions).control(
+        actor, run_id, body
+    )
+    return command_response(result, status, request)
+
+
 @router.get(
     "/system/capabilities",
     response_model=Capabilities,
@@ -164,9 +286,20 @@ async def capabilities(actor: Authenticated):
         app_version=__version__,
         capabilities=[
             Capability(id="projects", name="项目管理", status="ready"),
+            Capability(id="content", name="内容版本与审批", status="ready"),
             Capability(id="agent", name="LangChain 创作", status="not_integrated"),
-            Capability(id="orchestration", name="Temporal 任务编排", status="not_integrated"),
+            Capability(id="orchestration", name="Temporal 模拟演练", status="ready"),
             Capability(id="render", name="ComfyUI 镜头生成", status="not_integrated"),
             Capability(id="media", name="配音与成片合成", status="not_integrated"),
         ],
     )
+
+
+@router.get(
+    "/system/execution-status",
+    response_model=OutboxStatus,
+    operation_id="getExecutionStatus",
+    tags=["system"],
+)
+async def runtime_status(request: Request, actor: Authenticated):
+    return await execution_status(request.app.state.sessions, actor)

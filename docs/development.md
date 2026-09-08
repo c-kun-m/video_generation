@@ -6,13 +6,15 @@
 
 在仓库根目录运行 `scripts/dev.ps1`。推荐 PowerShell 7，Windows PowerShell 5.1 也可运行脚本。使用 Python 3.12、Node 24、pnpm 11.19.0；`python -m uv` 避免 uv 用户安装目录不在 PATH 的问题。Docker Desktop 需要先启动 Linux 容器引擎。
 
-`setup` 只在 `.env` 不存在时生成密码；不会覆盖配置。PostgreSQL 镜像固定到 17 系列的已验证摘要；数据存入 `video-generation_postgres-data` 命名卷。API 和数据库绑定回环地址。
+`setup` 在缺少 `.env` 时生成业务配置；升级时补充缺失的独立 Temporal 数据库密码，不覆盖已有有效密码。业务数据库使用 `video-generation_postgres-data` 命名卷，Temporal 使用独立 PostgreSQL 服务与 `video-generation_temporal-postgres-data` 命名卷。暴露端口仅绑定回环地址。
 
 | 命令 | 用途 |
 |---|---|
 | `check` | 检查 Python、Node、pnpm、uv 和 Docker 服务 |
 | `setup` | 创建本机配置，按锁文件安装依赖 |
-| `infra` | 启动 PostgreSQL 并等待健康 |
+| `infra` | 启动业务数据库、Temporal 及其独立数据库，并初始化 namespace |
+| `dispatcher` / `worker` | 分别启动独立 Outbox 投递器和 Temporal Worker |
+| `init-temporal` | 幂等创建当前 Temporal namespace |
 | `migrate` | 执行 Alembic 迁移 |
 | `pair` | 初始化本机 owner，生成或更新一次性配对码 |
 | `backend` | 前台启动 API；Ctrl+C 停止此进程 |
@@ -29,7 +31,7 @@ API 默认 `127.0.0.1:8000`。若变更端口，同时修改 `.env` 的 `VIDEO_A
 
 ## 合同变更
 
-修改 `backend/src/video_generation/contracts/models.py`，运行 `contracts`，提交 OpenAPI、JSON Schema 与 `api.generated.ts` 的差异。更新 `contracts/samples.json`，使同一有效/无效样例同时通过 Python/Pydantic、JSON Schema 和 TypeScript/Ajv 检查。
+修改 `backend/src/video_generation/contracts/` 中的类型，运行 `contracts`，提交 OpenAPI、JSON Schema 与 `api.generated.ts` 的差异。更新 `contracts/samples.json`，使同一有效/无效样例同时通过 Python/Pydantic、JSON Schema 和 TypeScript/Ajv 检查。
 
 类型生成保留请求字段的可选默认值；更新请求至少包含 title / archived 之一，由运行时合同再次验证。业务写请求不接受额外身份字段、null 标题、字符串布尔值或布尔版本号。
 
@@ -49,7 +51,7 @@ pnpm --dir frontend test:e2e
 Remove-Item Env:VIDEO_DESKTOP_EXECUTABLE
 ```
 
-精确测试结果与环境版本见 [验证记录](verification.md) 和 [发布清单](../release-manifest.json)。本阶段不包含 GPU / LLM / Temporal 实测。
+精确测试结果与环境版本见 [验证记录](verification.md) 和 [发布清单](../release-manifest.json)。B1 新增真实 Temporal 与进程崩溃恢复验证，仍不包含 GPU / LLM 实测。详见 [B1 说明](b1-first-part.md)。
 
 ## 常见问题
 
@@ -69,4 +71,8 @@ Remove-Item Env:VIDEO_DESKTOP_EXECUTABLE
 
 ## 当前交付边界
 
-单机私有工作空间、项目元数据管理、可运行目录构建。没有 installer / 签名 / 自动更新 / 后台系统服务，也没有用户邀请管理、媒体上传、脚本编辑或视频导出。不得把本地开发配置直接用作公网多用户部署。
+单机私有工作空间、项目管理、手动内容编辑与版本审批、可恢复模拟演练及目录构建。没有 installer / 签名 / 自动更新 / 后台系统服务，也没有用户邀请管理、媒体上传或真实视频导出。不得把本地开发配置直接用作公网多用户部署。
+
+## B1 进程故障验证
+
+`python -m uv run --project backend --frozen python scripts/verify_process_recovery.py --restart-temporal` 使用独立 `video_generation_faults_test` 数据库、18002 端口和 `video-process-tests` namespace。它会故意终止自己创建的 API、投递器与 Worker，并重启本仓库的 Temporal / Temporal PostgreSQL 容器；不要与其他 Temporal 验证同时运行。仅测试库允许启用精确操作 ID 的进程故障注入，默认关闭。报告写入 `runtime/verification/process-recovery/result.json`。

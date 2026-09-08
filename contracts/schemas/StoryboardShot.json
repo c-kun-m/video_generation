@@ -1,0 +1,44 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "shot_id": {
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "title": "Shot Id",
+      "type": "string"
+    },
+    "segment_ids": {
+      "items": {
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Segment Ids",
+      "type": "array"
+    },
+    "intent": {
+      "default": "",
+      "maxLength": 20000,
+      "title": "Intent",
+      "type": "string"
+    },
+    "camera": {
+      "default": "",
+      "maxLength": 20000,
+      "title": "Camera",
+      "type": "string"
+    },
+    "duration_frames": {
+      "default": 240,
+      "maximum": 1440,
+      "minimum": 1,
+      "title": "Duration Frames",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "shot_id"
+  ],
+  "title": "StoryboardShot",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

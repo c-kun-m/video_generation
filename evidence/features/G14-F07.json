@@ -1,0 +1,41 @@
+{
+  "feature_id": "G14-F07",
+  "design_revision": {
+    "path": "视频生产开发文档/14-桌面创作工作台与交互.md",
+    "sha256_lf": "8d813d766c87205894f44bb43c24d89710ecbb459dc45d166d22460b8685f99f",
+    "approved_implementation_scope_ref": "docs/b1-first-part.md"
+  },
+  "status": "IMPLEMENTING",
+  "verified_subset": {
+    "milestone": "B1 part 01",
+    "status": "VERIFIED",
+    "description": "手动编辑/历史/审批、模拟演练状态与控制、加密草稿、冲突比较和断线恢复。",
+    "report_ref": "evidence/reports/b1-verification.json"
+  },
+  "source_base_commit": "85e63c7580c34feefe7de86e93fd9116b209e9f5",
+  "implementation_paths": [
+    "frontend/src/renderer/src/features/workbench/ContentEditor.tsx",
+    "frontend/src/renderer/src/features/workbench/ContentFields.tsx",
+    "frontend/src/renderer/src/features/workbench/ProductionPanel.tsx",
+    "frontend/src/main/service.ts",
+    "frontend/src/main/vault.ts"
+  ],
+  "contract_test_refs": [
+    "backend/tests/test_contracts.py",
+    "frontend/tests/contracts.test.ts"
+  ],
+  "failure_test_refs": [
+    "frontend/tests/service.test.ts",
+    "frontend/tests/e2e/desktop.spec.ts"
+  ],
+  "manual_review": {
+    "reviewer": "Codex",
+    "scope": "Implementation review and actual desktop screenshots; no user or media-quality acceptance claimed",
+    "ref": "docs/b1-verification.md"
+  },
+  "known_limits": [
+    "未覆盖 Agent、素材/音轨、真实媒体状态、审片/导出、媒体 Range 与完整无障碍审计。",
+    "完整功能仍在实施中；本轮完成不表示整个 G03/G04/G14 或 B1 已完成。"
+  ],
+  "release_manifest_ref": "release-manifest.json"
+}

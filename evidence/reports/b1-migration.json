@@ -1,0 +1,43 @@
+{
+  "verified_at": "2026-09-08T10:50:52.238457+08:00",
+  "test_database": "video_generation_migration_20260908105047_test",
+  "backup": "runtime/backups/video-b1-before-0002.dump",
+  "main_original_records_preserved": true,
+  "main_original_row_count": 0,
+  "upgrade_downgrade_upgrade_preserved_original_records": true,
+  "scope": "Downgrade tested on restored foundation data with one seeded row in each original table, before any B1 content exists",
+  "tables": {
+    "workspaces": {
+      "rows": 1,
+      "sha256": "dea29c69efdc0529db4c503a073518931372caab6a852f2a1dc9caceec35ae4d"
+    },
+    "actors": {
+      "rows": 1,
+      "sha256": "467f7e678b5638dfa651a601993c6568935124279c59b6a9bcb54ee5efff311d"
+    },
+    "memberships": {
+      "rows": 1,
+      "sha256": "35380c8bad7de6f6c20ac75974768242e136d6df4d6aa2d7ec83e842220368e9"
+    },
+    "pairings": {
+      "rows": 1,
+      "sha256": "8c06bff8a6381b9aa0187f0a9a019e845cb09225e652f0a0e228a1a0efb8251d"
+    },
+    "device_sessions": {
+      "rows": 1,
+      "sha256": "a9d88b2b0b7b89d85e3499d40a15927971fa492eb92da716c21c52ba0750f4fc"
+    },
+    "projects": {
+      "rows": 1,
+      "sha256": "1ca27eb9dd1bddfcb28d55e54992982904a363ff2f21363ec084bb0fe1903c12"
+    },
+    "commands": {
+      "rows": 1,
+      "sha256": "ab1953940a19d38be657af68689c4b7afb403dd01eed974e92b39a774bc536e9"
+    },
+    "project_events": {
+      "rows": 1,
+      "sha256": "2a6e05563895f0bf78cdf1c3d325d5f4b81889fff9c535e77513af6071cab550"
+    }
+  }
+}

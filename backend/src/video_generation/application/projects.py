@@ -1,12 +1,14 @@
 import base64
-import hashlib
 import json
 from collections.abc import Awaitable, Callable
 from datetime import datetime
 
 from sqlalchemy import and_, func, or_, select
-from sqlalchemy.dialects.postgresql import insert
 
+from video_generation.application.auth import ActorContext
+from video_generation.application.commands import CommandHandler, append_event
+from video_generation.application.content import read_approvals, read_heads
+from video_generation.application.production import read_runs
 from video_generation.contracts.models import (
     CommandResult,
     CreateProject,
@@ -18,9 +20,8 @@ from video_generation.contracts.models import (
     ProjectSnapshot,
     UpdateProject,
 )
-from video_generation.domain.auth import ActorContext
 from video_generation.domain.errors import DomainError, not_found
-from video_generation.storage.models import Command, Event, ProjectRow, new_id, utcnow
+from video_generation.infrastructure.persistence.models import Event, ProjectRow, new_id, utcnow
 
 
 def project_dto(row: ProjectRow) -> Project:
@@ -34,13 +35,6 @@ def project_dto(row: ProjectRow) -> Project:
         updated_at=row.updated_at.isoformat(),
         archived_at=row.archived_at.isoformat() if row.archived_at else None,
     )
-
-
-def canonical_digest(value: dict) -> str:
-    data = json.dumps(
-        value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False
-    )
-    return hashlib.sha256(data.encode()).hexdigest()
 
 
 class ProjectService:
@@ -57,58 +51,21 @@ class ProjectService:
         success_status: int = 200,
     ) -> tuple[CommandResult, int]:
         actor.require_editor()
-        digest = canonical_digest({"action": action, "payload": payload})
-        async with self.sessions() as session, session.begin():
-            claim = await session.scalar(
-                insert(Command)
-                .values(
-                    tenant_id=actor.tenant_id,
-                    actor_id=actor.actor_id,
-                    command_id=command_id,
-                    action=action,
-                    request_digest=digest,
-                    result={},
-                )
-                .on_conflict_do_nothing()
-                .returning(Command.command_id)
-            )
-            record = await session.get(Command, (actor.tenant_id, actor.actor_id, command_id))
-            if claim is None:
-                if record.request_digest != digest:
-                    raise DomainError("IDEMPOTENCY_CONFLICT", "同一命令 ID 已用于不同请求。", 409)
-                return CommandResult.model_validate(record.result), record.http_status
-            try:
-                # Domain errors must occur before writes in the mutation. A savepoint also
-                # protects future mutations that perform writes before detecting a rejection.
-                async with session.begin_nested():
-                    project = await mutation(session)
-                    result = CommandResult(
-                        command_id=command_id,
-                        status="APPLIED",
-                        business_result_ref=ProjectRef(project_id=project.id),
-                        project=project_dto(project),
-                    )
-                http_status = success_status
-            except DomainError as exc:
-                result = CommandResult(command_id=command_id, status="REJECTED", error=exc.detail)
-                http_status = exc.status_code
-            record.result = result.model_dump(mode="json")
-            record.http_status = http_status
-        return result, http_status
 
-    @staticmethod
-    def _event(session, row: ProjectRow, command_id: str, event_type: str) -> None:
-        row.event_seq += 1
-        session.add(
-            Event(
-                tenant_id=row.tenant_id,
-                project_id=row.id,
-                seq=row.event_seq,
-                type=event_type,
-                row_version=row.row_version,
-                causation_command_id=command_id,
+        async def apply(session):
+            project = await mutation(session)
+            return CommandResult(
+                command_id=command_id,
+                status="APPLIED",
+                business_result_ref=ProjectRef(project_id=project.id),
+                project=project_dto(project),
             )
+
+        return await CommandHandler(self.sessions).execute(
+            actor, command_id, action, payload, apply, success_status
         )
+
+    _event = staticmethod(append_event)
 
     async def create(self, actor: ActorContext, request: CreateProject):
         async def mutation(session):
@@ -163,19 +120,21 @@ class ProjectService:
         )
 
     async def get_command(self, actor: ActorContext, command_id: str) -> CommandResult:
-        async with self.sessions() as session:
-            record = await session.get(Command, (actor.tenant_id, actor.actor_id, command_id))
-            if record is None:
-                raise not_found()
-            return CommandResult.model_validate(record.result)
+        return await CommandHandler(self.sessions).get(actor, command_id)
 
     async def snapshot(self, actor: ActorContext, project_id: str) -> ProjectSnapshot:
         async with self.sessions() as session:
+            await session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
             row = await session.get(ProjectRow, (actor.tenant_id, project_id))
             if row is None:
                 raise not_found()
-            # Metadata and cursor come from one SELECT, so they cannot straddle commits.
-            return ProjectSnapshot(project=project_dto(row), event_cursor=row.event_seq)
+            return ProjectSnapshot(
+                project=project_dto(row),
+                event_cursor=row.event_seq,
+                contents=await read_heads(session, actor.tenant_id, project_id),
+                approvals=await read_approvals(session, actor.tenant_id, project_id),
+                production_runs=await read_runs(session, actor.tenant_id, project_id),
+            )
 
     async def list(
         self, actor: ActorContext, archived: bool, limit: int, cursor: str | None
@@ -267,6 +226,8 @@ class ProjectService:
                         row_version=event.row_version,
                         causation_command_id=event.causation_command_id,
                         occurred_at=event.occurred_at.isoformat(),
+                        subject_ref=event.subject_ref,
+                        payload=event.payload,
                     )
                     for event in selected
                 ],

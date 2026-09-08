@@ -1,0 +1,121 @@
+{
+  "$defs": {
+    "ContentRef": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "content",
+          "default": "content",
+          "title": "Kind",
+          "type": "string"
+        },
+        "entity_kind": {
+          "enum": [
+            "brief",
+            "script",
+            "storyboard"
+          ],
+          "title": "Entity Kind",
+          "type": "string"
+        },
+        "revision_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_kind",
+        "revision_id",
+        "digest"
+      ],
+      "title": "ContentRef",
+      "type": "object"
+    },
+    "StoryboardShot": {
+      "additionalProperties": false,
+      "properties": {
+        "shot_id": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "title": "Shot Id",
+          "type": "string"
+        },
+        "segment_ids": {
+          "items": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "maxItems": 100,
+          "title": "Segment Ids",
+          "type": "array"
+        },
+        "intent": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Intent",
+          "type": "string"
+        },
+        "camera": {
+          "default": "",
+          "maxLength": 20000,
+          "title": "Camera",
+          "type": "string"
+        },
+        "duration_frames": {
+          "default": 240,
+          "maximum": 1440,
+          "minimum": 1,
+          "title": "Duration Frames",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "shot_id"
+      ],
+      "title": "StoryboardShot",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "storyboard",
+      "default": "storyboard",
+      "title": "Kind",
+      "type": "string"
+    },
+    "script_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ContentRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "fps": {
+      "const": 24,
+      "default": 24,
+      "title": "Fps",
+      "type": "integer"
+    },
+    "shots": {
+      "items": {
+        "$ref": "#/$defs/StoryboardShot"
+      },
+      "maxItems": 8,
+      "title": "Shots",
+      "type": "array"
+    }
+  },
+  "title": "StoryboardContent",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
