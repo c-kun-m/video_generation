@@ -2,6 +2,8 @@
 
 可以直接把本目录 `backend` 当作 PyCharm 项目打开。后端使用标准的 `src` 包布局：`video_generation` 是可安装包，`src` 是源码容器。
 
+需要按 YAML 一起启动整个项目时，完成下方解释器配置后选择 **Video Project** 运行配置。它执行 `python -m video_generation start`，读取仓库根目录 `startup.yml`；只打开 `backend` 也能找到配置。可以通过 `enabled` 选择是否启动 API、Worker、Dispatcher 和桌面，详见 [YAML 启动说明](../docs/startup-yaml.md)。
+
 ## 配置一次即可
 
 1. 在 **backend 目录**的终端执行 `python -m uv sync --frozen`，安装锁定依赖，并把本项目可编辑安装到 `.venv`。

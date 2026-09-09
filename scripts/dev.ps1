@@ -1,7 +1,9 @@
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('setup', 'check', 'infra', 'migrate', 'pair', 'backend', 'worker', 'dispatcher', 'init-temporal', 'desktop', 'preview', 'contracts', 'build', 'test', 'test-e2e', 'package')]
-    [string]$Action = 'check'
+    [ValidateSet('start', 'setup', 'check', 'infra', 'migrate', 'pair', 'backend', 'worker', 'dispatcher', 'init-temporal', 'desktop', 'preview', 'contracts', 'build', 'test', 'test-e2e', 'package')]
+    [string]$Action = 'check',
+    [string]$Config = 'startup.yml',
+    [switch]$Check
 )
 $ErrorActionPreference = 'Stop'
 $videoRoot = Split-Path -Parent $PSScriptRoot
@@ -31,7 +33,7 @@ function Ensure-TemporalConfig {
 }
 function Read-ServiceConfig {
     # Only the public service URL reaches Electron. Database credentials stay in Python/Compose.
-    if (Test-Path -LiteralPath '.env') {
+    if (-not $env:VIDEO_SERVICE_URL -and (Test-Path -LiteralPath '.env')) {
         foreach ($line in Get-Content -LiteralPath '.env') {
             if ($line -match '^VIDEO_SERVICE_URL=(.+)$') { $env:VIDEO_SERVICE_URL = $Matches[1].Trim() }
         }
@@ -40,6 +42,13 @@ function Read-ServiceConfig {
     Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
 }
 switch ($Action) {
+    'start' {
+        $videoInterpreter = Join-Path $videoRoot 'backend/.venv/Scripts/python.exe'
+        if (-not (Test-Path -LiteralPath $videoInterpreter)) { throw 'Run setup first to create the backend environment.' }
+        $videoLaunchArgs = @('-m', 'video_generation', 'start', '--config', $Config)
+        if ($Check) { $videoLaunchArgs += '--check' }
+        Run-Checked $videoInterpreter $videoLaunchArgs
+    }
     'setup' {
         Run-Checked 'python' @('--version')
         Run-Checked 'node' @('--version')

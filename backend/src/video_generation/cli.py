@@ -41,6 +41,13 @@ async def _pair(name: str, as_json: bool):
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(description="Video Generation API and local management")
     sub = parser.add_subparsers(dest="command", required=True)
+    start = sub.add_parser("start", help="Start enabled project services from YAML")
+    start.add_argument(
+        "--config", default="startup.yml", help="Config path relative to repository root"
+    )
+    start.add_argument(
+        "--check", action="store_true", help="Validate configuration without starting processes"
+    )
     sub.add_parser("serve", help="Start the local API with the supported event loop")
     sub.add_parser("init-temporal", help="Create the local durable Temporal namespace")
     sub.add_parser("worker", help="Run the durable simulation Temporal Worker")
@@ -51,7 +58,11 @@ def main(argv: list[str] | None = None):
     owner.add_argument("--name", default="本机创作者")
     owner.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
-    if args.command == "serve":
+    if args.command == "start":
+        from video_generation.launcher import launch
+
+        raise SystemExit(launch(args.config, args.check))
+    elif args.command == "serve":
         serve()
     elif args.command == "init-temporal":
         from video_generation.workers.setup import initialize_temporal

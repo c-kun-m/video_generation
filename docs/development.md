@@ -12,6 +12,8 @@
 |---|---|
 | `check` | 检查 Python、Node、pnpm、uv 和 Docker 服务 |
 | `setup` | 创建本机配置，按锁文件安装依赖 |
+| `start` | 按根目录 `startup.yml` 启动启用的服务；Ctrl+C 停止本次启动的应用进程 |
+| `start -Check` | 只校验 YAML 并显示启用项，不执行准备或启动命令 |
 | `infra` | 启动业务数据库、Temporal 及其独立数据库，并初始化 namespace |
 | `dispatcher` / `worker` | 分别启动独立 Outbox 投递器和 Temporal Worker |
 | `init-temporal` | 幂等创建当前 Temporal namespace |
@@ -26,6 +28,8 @@
 | `package` | 生成 Windows 目录构建 |
 
 API 默认 `127.0.0.1:8000`。若变更端口，同时修改 `.env` 的 `VIDEO_API_PORT` 和 `VIDEO_SERVICE_URL`。此版本不支持远程服务地址。Swagger 文档位于本机 `/docs`；业务接口仍需设备 session。健康检查为 `/health/live` 与 `/health/ready`，后者验证数据库连接及迁移头。
+
+统一启动和配置字段见 [YAML 启动说明](startup-yaml.md)。`start` 为桌面传入 API 当前地址；显式环境变量 `VIDEO_SERVICE_URL` 优先，单独运行 `desktop` 时仍可从 `.env` 读取地址。密码仍留在 `.env`，不写入提交的 YAML。修改进程开关后需重启启动器。
 
 设备凭据保存在 Electron `app.getPath('userData')/session.enc`，由操作系统加密，不能移植到其他 OS 用户。默认本机 owner 会话 30 天有效。过期后可重新运行 `pair`，按原工作空间身份配对；未确认操作继续保留。不要手工删除有待确认操作的桌面数据目录。
 

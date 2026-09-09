@@ -1,0 +1,41 @@
+{
+  "verified_at": "2026-09-09T10:52:56.122064+00:00",
+  "configuration": "startup.yml",
+  "api_and_desktop_http_ready": true,
+  "worker_and_dispatcher_heartbeats": true,
+  "launcher_stop_closed_owned_ports": [
+    18004,
+    5173
+  ],
+  "docker_data_services_retained": true,
+  "database": "video_generation_launcher_test",
+  "source_base_commit": "4fc05b4cda3f7fa4f4309eb932cdfb0a70783110",
+  "checks": {
+    "pytest_passed": 69,
+    "vitest_passed": 30,
+    "new_launcher_tests": 15,
+    "ruff": "passed",
+    "typescript": "passed",
+    "prettier": "passed",
+    "windows_ownership_test_after_cleanup_refinement": "passed"
+  },
+  "test_refs": [
+    "backend/tests/test_launcher.py",
+    "backend/tests/test_cli.py"
+  ],
+  "sha256_lf": {
+    "startup.yml": "b2e4a44018f8a5a5d523636bd3502e621929d470deb44c4af04f39c85e9dba63",
+    "scripts/dev.ps1": "52381166e290792ebfc601e07c51e942a0389a44de3dbce7072eeae4ce2c1661",
+    "backend/src/video_generation/cli.py": "b32316dc49aebf58fa7676c6ecc21b6c362d53407bdccbfe41e32df711eb9c06",
+    "backend/src/video_generation/launcher.py": "8a544095d9c76ef85425cb2884e3d96c231999a7c24d3cae098d788f931ce5dd",
+    "backend/src/video_generation/_launch_child.py": "464c28fdac6678f6cfdb0f05c4088722bf15602dbf8c8d2d972a3826ae2c5a3d",
+    "backend/src/video_generation/infrastructure/processes.py": "2f88abefb2caec46196765cb64f350172c501e81f4434612dc49b7b50a365bee",
+    "backend/tests/test_launcher.py": "1ae741e287dc6515c9a34b997675c82482a041d9fea6857369cc2ef6cfa63116",
+    "backend/uv.lock": "f1f6e02feb1b92f64b4ddf74931964feee0dc96d5d53f0b774bd76a2f7755a55"
+  },
+  "known_limits": [
+    "Local development launcher; no automatic restart or configuration hot reload.",
+    "Worker/dispatcher without ready_url report process startup; connected state comes from heartbeats.",
+    "No new packaged desktop release. Docker data services are intentionally retained."
+  ]
+}

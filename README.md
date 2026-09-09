@@ -13,6 +13,7 @@ LangChain、ComfyUI 和 FFmpeg 尚未接入；模拟演练只产生步骤记录�
 - [目标分步与验收进度](docs/b1-progress.md)
 - [运行、测试与故障排查](docs/development.md)
 - [直接在 PyCharm 打开 backend](backend/README.md)
+- [YAML 统一启动配置](docs/startup-yaml.md)
 
 ## 本机启动（Windows / PowerShell）
 
@@ -22,34 +23,16 @@ LangChain、ComfyUI 和 FFmpeg 尚未接入；模拟演练只产生步骤记录�
 
 ```powershell
 .\scripts\dev.ps1 setup
-.\scripts\dev.ps1 infra
-.\scripts\dev.ps1 migrate
-.\scripts\dev.ps1 pair
+.\scripts\dev.ps1 start
 ```
 
-`setup` 自动生成本机数据库密码，不覆盖已有 `.env`。`pair` 会显示 10 分钟有效的一次性配对码。
+`setup` 自动生成本机数据库密码，不覆盖已有 `.env`。`start` 读取根目录 [startup.yml](startup.yml)，按配置准备数据库与 Temporal，然后启动 API、投递器、Worker 和桌面。修改某项的 `enabled: false` 即可禁用它；修改后重新启动生效。
 
-分别打开四个终端：
+首次配对时，在另一个终端执行 `.\scripts\dev.ps1 pair`，把显示的 10 分钟有效配对码输入桌面。已配对设备不需要重复配对。
 
-```powershell
-# 终端 1：保持后端运行
-.\scripts\dev.ps1 backend
-```
+保持启动终端打开；Ctrl+C 结束本次启动的程序，保留 Docker 数据服务。关闭桌面窗口时后台继续运行。每个进程的日志在 `runtime/launcher/<本次启动时间>/`。仅检查配置可执行 `.\scripts\dev.ps1 start -Check`。
 
-```powershell
-# 终端 2：投递持久化命令
-.\scripts\dev.ps1 dispatcher
-```
-
-```powershell
-# 终端 3：执行可恢复的模拟流程
-.\scripts\dev.ps1 worker
-```
-
-```powershell
-# 终端 4：启动桌面，在配对页面输入刚才的配对码
-.\scripts\dev.ps1 desktop
-```
+需要单独调试时，仍可分别运行 `backend`、`dispatcher`、`worker`、`desktop`；先在 YAML 中关闭由 IDE 单独运行的对应项，避免重复占用端口。PyCharm 可以直接选择 **Video Project** 按 YAML 统一启动。
 
 开发桌面占用 `127.0.0.1:5173`，API 使用 `127.0.0.1:8000`，业务 PostgreSQL 使用 `127.0.0.1:5432`，Temporal 使用 `127.0.0.1:7233`。关闭桌面不会停止后台流程。内容编辑和审批只依赖 API 与业务数据库。
 

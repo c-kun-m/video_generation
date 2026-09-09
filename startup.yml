@@ -1,0 +1,39 @@
+# 本机开发启动配置。修改 enabled 后重新启动即可生效。
+# 配置中的命令按参数数组执行；工作目录始终以项目根目录为基准。
+version: 1
+
+# 一次性准备工作按顺序执行，成功后才启动 services。
+prepare:
+  infrastructure:
+    enabled: true
+    command: ["docker", "compose", "--env-file", ".env", "-f", "deploy/video/compose.yaml", "up", "-d", "--wait"]
+    timeout_seconds: 180
+  temporal_namespace:
+    enabled: true
+    command: ["{python}", "-m", "video_generation", "init-temporal"]
+    timeout_seconds: 30
+  migrations:
+    enabled: true
+    command: ["{python}", "-m", "alembic", "-c", "backend/alembic.ini", "upgrade", "head"]
+    timeout_seconds: 60
+
+# 服务按下面的顺序启动；有 ready_url 的服务会等到 HTTP 检查成功。
+services:
+  api:
+    enabled: true
+    command: ["{python}", "-m", "video_generation", "serve"]
+    ready_url: "{api_url}/health/ready"
+    timeout_seconds: 30
+  dispatcher:
+    enabled: true
+    command: ["{python}", "-m", "video_generation", "dispatcher"]
+  worker:
+    enabled: true
+    command: ["{python}", "-m", "video_generation", "worker"]
+  desktop:
+    enabled: true
+    command: ["{powershell}", "-NoProfile", "-File", "scripts/dev.ps1", "desktop"]
+    ready_url: "http://127.0.0.1:5173/"
+    timeout_seconds: 60
+    # 关闭桌面后，后台制作仍继续。Ctrl+C 或停止启动器才结束本次进程组。
+    stop_project_on_exit: false

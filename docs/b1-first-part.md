@@ -8,19 +8,10 @@
 
 ```powershell
 ./scripts/dev.ps1 setup
-./scripts/dev.ps1 infra
-./scripts/dev.ps1 migrate
+./scripts/dev.ps1 start
 ```
 
-分别在三个终端启动后台进程：
-
-```powershell
-./scripts/dev.ps1 backend
-./scripts/dev.ps1 dispatcher
-./scripts/dev.ps1 worker
-```
-
-然后运行 `./scripts/dev.ps1 pair` 生成一次性配对码，另开终端运行 `./scripts/dev.ps1 desktop`。已配对设备继续使用原身份。关闭桌面不会停止 API、投递器、Worker 或数据库。
+`start` 按根目录 `startup.yml` 的开关准备基础服务并启动各进程，详见 [YAML 统一启动](startup-yaml.md)。另开终端运行 `./scripts/dev.ps1 pair` 生成一次性配对码。已配对设备继续使用原身份。关闭桌面不会停止 API、投递器、Worker 或数据库；在启动终端 Ctrl+C 会停止本次管理的应用进程，Docker 服务保留。
 
 PyCharm 只打开 `backend` 时仍选择 `.venv` 解释器，并将 `src` 标为 Sources Root；共享运行配置新增 `Video Temporal Worker`、`Video Outbox Dispatcher`、`Video Initialize Temporal`。对应 CLI 是 `python -m video_generation worker`、`dispatcher`、`init-temporal`。
 
